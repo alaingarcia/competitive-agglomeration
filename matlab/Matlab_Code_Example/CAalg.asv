@@ -1,0 +1,32 @@
+function [cl_num cl_centers cl_assigment progress_log] = CAalg(f, c, Eita, MaxIter, MaxPts, MaxPts2, TAU, EXPINC, EXPDEC, m_p)
+%f - NxDim array with feature vecttors, N - number of feature vectors, Dim - dimentionality of feature vectors
+%c - initial centers
+cl_num = size(c,1);  %cl_num - initial number of clusters
+Dim = size(f,2);     %Dim - feature dimetion
+N = size(f,1);       %N - number of feature vectors
+%Eita - controls merging
+%MaxIter - max number of iterations
+%MaxPts - soft merging threshold
+%MaxPts2 - crisp merging threshold
+%TAU - controls merging
+%EXPINC - exponential increase iteration number
+%EXPDEC - exponential decrease iteration number
+%m_p - distance between vectors is d = (x1-y1)^m_p+...+(xn-yn)^m_p , takes only integer values(to optimize speed)!!!
+
+fid = fopen('InData.dat', 'w');
+fwrite(fid,[nd nv f'],'double');
+fclose(fid);
+
+fid = fopen('InCenters.dat', 'w');
+fwrite(fid,c,'double');
+fclose(fid);
+
+fid = fopen('MinClSize.dat', 'w');
+fwrite(fid, [MaxPts(1:MaxIter) MaxPts2(1:MaxIter)],'double');
+fclose(fid);
+
+[trash progress_log]  = system(['CAFunction.exe ' int2str(cl_num) ' ' int2str(N) ' ' int2str(Dim) ' ' num2str(Eita) ' ' int2str(MaxIter) ' ' num2str(TAU) ' ' int2str(EXPINC) ' ' int2str(EXPDEC) ' ' num2str(m_p)]);
+
+cl_num       = load('OutClustNum.txt');  %final number of clusters
+cl_centers   = load('OutCenters.txt');   %cluster centers
+cl_assigment = load('OutCluster.txt');   %assigment of points to clusters

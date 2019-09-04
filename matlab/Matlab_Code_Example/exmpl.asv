@@ -1,0 +1,21 @@
+clear all;
+
+cl_num = 20;
+Eita = 1;
+MaxIter = 100;
+MaxPts =  zeros(100,1) %soft merging condition
+MaxPts2 = [ones(20,1); 5*ones(20,1); 10*ones(60,1)]; %crisp merging condition
+ 
+TAU = 20;
+EXPINC = 40;
+EXPDEC = 60;
+m_p = 3;
+
+f = [rand(20,2); rand(20,2)+1; rand(20,2)+2;]; % features  (example with 3 clusters)
+c = rand(cl_num, 2); %random initial centers 
+
+[cl_num cl_centers cl_assigment] = 
+
+CAalg(f, c, cl_num, Dim, N, Eita, MaxIter);
+
+
