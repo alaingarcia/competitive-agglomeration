@@ -52,7 +52,7 @@ def CA(FeatVect, NumOfVectors, Dim, NumClust, Center, MaximumIt, Eita_0, MinPts,
     Card = np.zeros(NumClust)
 
 	# PreviousCenter = DMatrix_2D(0,NumClust,0,Dim)
-    PreviousCenter = np.zeros(NumClust, Dim)
+    PreviousCenter = np.zeros((NumClust, Dim))
 
     for i in range(0, NumClust):
         for j in range(0, Dim):
@@ -123,7 +123,7 @@ def EucDistance(FeatVector, Center, NumClust, NumOfVectors, Dim, m_p):
                 for p in range(0, m_p):
                     temp1 = temp1*temp
                 FeatVector[i].dist[j] += abs(temp1)
-            FeatVector[i].dist[j] = max(EPS, FeatVector.dist[j])
+            FeatVector[i].dist[j] = max(EPS, FeatVector[i].dist[j])
     return(FeatVector)
 
 """
@@ -280,11 +280,11 @@ def CompMem(FeatVector, NumClust, AggCte, NumOfVectors):
 /**************************************************************************************************/
 """
 def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2):
-    i, j, OptNumClust = 0
-    Empty_clust = np.zeros(NumClust - 1)
-    Card = np.zeros(NumClust - 1)
-    Card2 = np.zeros(NumClust - 1)
-    Card3 = np.zeros(NumClust - 1)
+    i, j, OptNumClust = (0, 0, 0)
+    Empty_clust = np.zeros(NumClust)
+    Card = np.zeros(NumClust)
+    Card2 = np.zeros(NumClust)
+    Card3 = np.zeros(NumClust)
 
     for j in range(0, NumClust):
         Card2[j] = 0
@@ -372,6 +372,8 @@ def FuzzCenters(FeatVect, Center, NumClust, NumOfVectors, Dim):
 
         for k in range(0, Dim):
             Center[j][k] /= Card[j] + EPS
+
+    return Center
 
 """
 /**************************************************************************************************/
