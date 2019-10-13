@@ -6,14 +6,7 @@ from sklearn import datasets
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 
-MaximumIt = 10
-EITA_0 = 5.000000
-TAU = 10.000000
-EXPINC = 20.000000
-EXPDEC = 80.000000
-MIN_SIMILARITY = 0.1
-EPS = 1.0e-6
-MAX_CENT_DIFF = 0.001
+
 
 if __name__ == '__main__':
     '''NumClust = argv[1]
@@ -26,16 +19,25 @@ if __name__ == '__main__':
     EXPDEC = argv[8]
     m_p = argv[9] # power for distance
     ca_path = argv[10]'''
-
-    NumClust = 4
-    NumOfVectors = 50
-    Dim = 3
-    m_p = 3
+    MaximumIt = 50
+    EITA_0 = 2.5
+    TAU = 10
+    EXPINC = 25
+    EXPDEC = 35
+    MIN_SIMILARITY = 0.1
+    EPS = 1.0e-6
+    MAX_CENT_DIFF = 0.001
+    NumClust = 10
+    NumOfVectors = 60
+    Dim = 2
+    m_p = 2
  
     print("Start Reading")
-    input = datasets.load_iris()
+    InCenters = pd.read_csv('InCenters.csv', header=None)
+    InData = pd.read_csv('InData.csv', header=None)
+    MinClSize = np.zeros((50,2))
 
-    # Initialize
+    # Initialize Data (from InData)
     FeatVect = []
     for i in range(0, NumOfVectors):
         FeatVect.insert(i,CA.Feature_Info(np.zeros(NumClust), 
@@ -43,17 +45,16 @@ if __name__ == '__main__':
     # Populate
     for i in range(0, Dim):
         for j in range(0, NumOfVectors):
-            FeatVect[j].dimen[i] = input.data[j,i]
+            FeatVect[j].dimen[i] = InData.iloc[j,i]
 
-    # Centers start at 0, 0
-    # centers = np.zeros((NumClust, Dim))
-    centers = np.array([[0.,0.,0.],[1.,1.,1.],[2.,2.,2.],[3.,3.,3.]])
+    # Initialize Centers (random data from InCenters)
+    centers = InCenters.values
 
-    # MinPts?
+    # MinPts are zero vectors ?
     MinPts = np.zeros(MaximumIt)
     MinPts2 = np.zeros(MaximumIt)
 
-    NumClust = CA.CA(FeatVect, NumOfVectors, Dim, NumClust, centers,
+    NumClust, Center = CA.CA(FeatVect, NumOfVectors, Dim, NumClust, centers,
                     MaximumIt, EITA_0, MinPts, MinPts2, TAU,
                     EXPINC, EXPDEC, m_p)
 
@@ -72,15 +73,14 @@ if __name__ == '__main__':
     centerOut.close()
 
     fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    x = input.data[:,0]
-    y = input.data[:,1]
-    z = input.data[:,2]
-    ax.scatter3D(x, y, z, c=input.target, cmap='Set1')
+    ax = plt.axes()
+    x = InData.iloc[:,0]
+    y = InData.iloc[:,1]
+    ax.scatter(x, y)
     
     centerCoord = np.zeros(Dim)
     for i in range(0, NumClust):
         for j in range(0, Dim):
             centerCoord[j] = centers[i][j]
-        ax.scatter3D(centerCoord[0], centerCoord[1], centerCoord[2], color='black')
+        ax.scatter(centerCoord[0], centerCoord[1], color='black')
     plt.show()

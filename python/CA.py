@@ -61,18 +61,18 @@ def CA(FeatVect, NumOfVectors, Dim, NumClust, Center, MaximumIt, Eita_0, MinPts,
     while (IterNum < MaximumIt):
         print("IterNum={}\n".format(IterNum))
         
-        FeatVector = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
+        FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
         FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
         
         if (IterNum>2):
-            AggCte = Get_AggCte(FeatVect,NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC)
+            FeatVector, AggCte = Get_AggCte(FeatVect,NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC)
             print("AggConst={}\n".format(AggCte))
             FeatVector = CompMem(FeatVect, NumClust,AggCte,NumOfVectors)
-            NumClust = UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2)
+            FeatVector, NumClust, MinPts, MinPts2 = UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2)
         else:
             FeatVector = FuzzMem(FeatVect, NumClust, NumOfVectors)
         
-        Center = FuzzCenters(FeatVect,Center,NumClust,NumOfVectors,Dim)
+        FeatVector, Center = FuzzCenters(FeatVect,Center,NumClust,NumOfVectors,Dim)
         
         CenDiff = 0.0
         for i in range(0, NumClust):
@@ -91,10 +91,10 @@ def CA(FeatVect, NumOfVectors, Dim, NumClust, Center, MaximumIt, Eita_0, MinPts,
             for j in range(0, Dim):
                 PreviousCenter[i][j] = Center[i][j]
     
-    FeatVector = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
+    FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
     FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
     
-    return(NumClust)
+    return(NumClust, Center)
 """
 /**************************************************************************************************/
 /*** This procedure computes the Euclidean distance of all feature vectors						***/
@@ -117,6 +117,7 @@ def CA(FeatVect, NumOfVectors, Dim, NumClust, Center, MaximumIt, Eita_0, MinPts,
 def EucDistance(FeatVector, Center, NumClust, NumOfVectors, Dim, m_p):
     for i in range(0, NumOfVectors):
         for j in range(0, NumClust):
+            FeatVector[i].dist[j] = 0
             for k in range(0, Dim):
                 temp = FeatVector[i].dimen[k]-Center[j][k]
                 temp1 = 1
@@ -124,7 +125,7 @@ def EucDistance(FeatVector, Center, NumClust, NumOfVectors, Dim, m_p):
                     temp1 = temp1*temp
                 FeatVector[i].dist[j] += abs(temp1)
             FeatVector[i].dist[j] = max(EPS, FeatVector[i].dist[j])
-    return(FeatVector)
+    return(FeatVector, Center)
 
 """
 /**************************************************************************************************/
@@ -200,7 +201,7 @@ def Get_AggCte (FeatVector, NumClust, IterNum, NumOfVectors, Eita_0, TAU, EXPINC
     
     alpha = Eita_0 * math.exp(Exponent) * ObjFunc/SumCard2
     
-    return(alpha)
+    return(FeatVector, alpha)
 
 """
 /**************************************************************************************************/
@@ -285,11 +286,9 @@ def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2
     Card = np.zeros(NumClust)
     Card2 = np.zeros(NumClust)
     Card3 = np.zeros(NumClust)
-
-    for j in range(0, NumClust):
-        Card2[j] = 0
     
-    for i in range(i < NumClust):
+    
+    for i in range(0, NumClust):
         Empty_clust[i] = 0 # Assume first that all clusters are not empty
         Card[i] = 0
         Card3[i] = 0
@@ -313,7 +312,7 @@ def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2
                     FeatVect[j].cluster = OptNumClust
             OptNumClust += 1
 
-    return(OptNumClust)
+    return(FeatVect, OptNumClust, MinPts, MinPts2)
 
 """
 /**************************************************************************************************/
@@ -339,6 +338,7 @@ def FuzzMem(FeatVector, NumClust, NumOfVectors):
         for j in range(0, NumClust):
             temp = FeatVector[i].dist[j]
             FeatVector[i].memship[j] = 1 / (SumInvDist*temp)
+    return(FeatVector)
 """
 /**************************************************************************************************/
 /*** This procedure updates the centers for the Fuzzy algorithms.								***/
@@ -373,7 +373,7 @@ def FuzzCenters(FeatVect, Center, NumClust, NumOfVectors, Dim):
         for k in range(0, Dim):
             Center[j][k] /= Card[j] + EPS
 
-    return Center
+    return (FeatVect, Center)
 
 """
 /**************************************************************************************************/
@@ -395,3 +395,4 @@ def InitCenters (Center, FeatVect, NumClust, NumOfVectors, Dim):
         for j in range(0, NumClust):
             index = j * NumOfVectors/NumClust
             Center[j][k] = FeatVect[index].dimen[k]
+    return(Center, FeatVect)
