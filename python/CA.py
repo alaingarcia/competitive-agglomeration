@@ -298,7 +298,7 @@ def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2
             if FeatVect[j].cluster == i:
                 Card2[i] += 1
         
-        if (Card[i] < MinPts[IterNum]) or (Card2[i] < MinPts2[IterNum]):
+        if (Card[i] <= MinPts[IterNum]) or (Card2[i] <= MinPts2[IterNum]):
             Empty_clust[i] = 1
 
         if IterNum >= 3:

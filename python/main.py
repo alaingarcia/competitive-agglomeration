@@ -52,7 +52,8 @@ if __name__ == '__main__':
 
     # MinPts are zero vectors ?
     MinPts = np.zeros(MaximumIt)
-    MinPts2 = np.zeros(MaximumIt)
+    MinPts2 = np.ones(MaximumIt)
+    MinPts2[int(MaximumIt/2):MaximumIt] *= 5
 
     NumClust, Center = CA.CA(FeatVect, NumOfVectors, Dim, NumClust, centers,
                     MaximumIt, EITA_0, MinPts, MinPts2, TAU,
