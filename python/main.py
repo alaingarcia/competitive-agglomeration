@@ -9,16 +9,6 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
-    '''NumClust = argv[1]
-    NumOfVectors = argv[2]
-    Dim = argv[3]
-    Eita_0 = argv[4]
-    MaximumIt = argv[5]
-    TAU = argv[6]
-    EXPINC = argv[7]
-    EXPDEC = argv[8]
-    m_p = argv[9] # power for distance
-    ca_path = argv[10]'''
     MaximumIt = 50
     EITA_0 = 2.5
     TAU = 10

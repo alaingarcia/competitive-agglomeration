@@ -1,14 +1,9 @@
 import numpy as np
 import math
 
-MaximumIt = 10
-EITA_0 = 5.000000
-TAU = 10.000000
-EXPINC = 20.000000
-EXPDEC = 80.000000
-MIN_SIMILARITY = 0.1
 EPS = 1.0e-6
 MAX_CENT_DIFF = 0.001
+INFINITY = 1.0e35
 
 class Feature_Info():
     def __init__(self, memship, dist, dimen, cluster):
@@ -155,7 +150,7 @@ def AssignPts(FeatVector, NumClust, NumOfVectors):
 	}
     """
     for i in range(0, NumOfVectors):
-        min = np.inf
+        min = INFINITY
         for j in range(0, NumClust):
             if FeatVector[i].dist[j] < min:
                 min = FeatVector[i].dist[j]
