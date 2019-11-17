@@ -47,7 +47,7 @@ def CA(InData, InCenters,
     # Initialize Data (from InData)
     FeatVect = []
     for i in range(0, NumOfVectors):
-        FeatVect.insert(i,CA.Feature_Info(np.zeros(NumClust), 
+        FeatVect.insert(i,Feature_Info(np.zeros(NumClust), 
                         np.zeros(NumClust), np.zeros(Dim), None))
     # Populate
     for i in range(0, Dim):
@@ -57,6 +57,9 @@ def CA(InData, InCenters,
     # Initialize Centers (random data from InCenters)
     Center = InCenters.values
 
+    print(InData.head())
+    print(InCenters.head())
+    
     # MinPts are zero vectors ?
     MinPts = np.zeros(MaximumIt)
     MinPts2 = np.ones(MaximumIt)
