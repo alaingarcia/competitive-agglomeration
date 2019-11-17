@@ -74,15 +74,14 @@ def CA(InData, InCenters,
             PreviousCenter[i][j] = Center[i][j]
 
     while (IterNum < MaximumIt):
-        print("IterNum={}\n".format(IterNum))
+        #print("IterNum={}\n".format(IterNum))
         
         FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
         FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
 
         if (IterNum>2):
-            print("NumClust:{},IterNum:{},NumOfVectors:{},Eita_0:{},TAU:{},EXPINC:{},EXPDEC:{}".format(NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC))
             FeatVector, AggCte = Get_AggCte(FeatVect,NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC)
-            print("AggConst={}\n".format(AggCte))
+            #print("AggConst={}\n".format(AggCte))
             FeatVector = CompMem(FeatVect, NumClust,AggCte,NumOfVectors)
             FeatVector, NumClust, MinPts, MinPts2 = UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2)
         else:
@@ -99,7 +98,7 @@ def CA(InData, InCenters,
             break
         
         IterNum += 1 
-        print("[It# {}]Num. Clust={}\n".format(IterNum,NumClust))
+        #print("[It# {}]Num. Clust={}\n".format(IterNum,NumClust))
         PreviousNumClust = NumClust
 
 		# Copy the centers into the previous centers
@@ -110,6 +109,16 @@ def CA(InData, InCenters,
     FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
     FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
     
+    Classifications = []
+    for i in range(0, NumOfVectors):
+        Classifications.append(FeatVect[i].cluster)
+
+    OutCenters = []
+    for i in range(0, NumClust):
+        OutCenters.append([])
+        for j in range(0, Dim):
+            OutCenters[i].append(Center[i][j])
+    """
     # ---------- OUTPUT TO FILES ---------------
     print(NumClust, file=open('NumClust.txt', 'w'))
 
@@ -139,8 +148,9 @@ def CA(InData, InCenters,
             centerCoord[j] = Center[i][j]
         ax.scatter(centerCoord[0], centerCoord[1], color='red')
     plt.show()
+    """
 
-    return(NumClust, Center)
+    return(NumClust, OutCenters, Classifications)
 """
 /**************************************************************************************************/
 /*** This procedure computes the Euclidean distance of all feature vectors						***/
@@ -346,8 +356,8 @@ def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2
         if (Card[i] <= MinPts[IterNum]) or (Card2[i] <= MinPts2[IterNum]):
             Empty_clust[i] = 1
 
-        if IterNum >= 3:
-            print('{} ===> Card[{}] = {}   Card2[{}] = {}\n'.format(IterNum, i, Card[i], i, Card2[i]))
+        #if IterNum >= 3:
+            #print('{} ===> Card[{}] = {}   Card2[{}] = {}\n'.format(IterNum, i, Card[i], i, Card2[i]))
 
     for i in range(0, NumClust):
         if Empty_clust[i] == 0:
