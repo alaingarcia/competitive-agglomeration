@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 EPS = 1.0e-6
 MAX_CENT_DIFF = 0.001
@@ -38,13 +39,32 @@ class Feature_Info():
 /***		     the membership assignment.														***/
 /**************************************************************************************************/
 """
-def CA(FeatVect, NumOfVectors, Dim, NumClust, Center, MaximumIt, Eita_0, MinPts, MinPts2, TAU, EXPINC, EXPDEC, m_p):
+def CA(InData, InCenters,
+        MaximumIt=50, Eita_0=2.5, TAU=10, EXPINC=25, 
+        EXPDEC=35, EPS=1.0e-6, MAX_CENT_DIFF=0.001,
+        NumClust=10, NumOfVectors=10, Dim=2, m_p=2):
+    
+    # Initialize Data (from InData)
+    FeatVect = []
+    for i in range(0, NumOfVectors):
+        FeatVect.insert(i,CA.Feature_Info(np.zeros(NumClust), 
+                        np.zeros(NumClust), np.zeros(Dim), None))
+    # Populate
+    for i in range(0, Dim):
+        for j in range(0, NumOfVectors):
+            FeatVect[j].dimen[i] = InData.iloc[j,i]
+
+    # Initialize Centers (random data from InCenters)
+    Center = InCenters.values
+
+    # MinPts are zero vectors ?
+    MinPts = np.zeros(MaximumIt)
+    MinPts2 = np.ones(MaximumIt)
+    MinPts2[int(MaximumIt/2):MaximumIt] *= 5
+
     i, j, IterNum = 0, 0, 0
     AggCte = 0.0
     PreviousNumClust = NumClust
-
-	# Card = DMatrix_1D(0,NumClust)
-    Card = np.zeros(NumClust)
 
 	# PreviousCenter = DMatrix_2D(0,NumClust,0,Dim)
     PreviousCenter = np.zeros((NumClust, Dim))
@@ -89,6 +109,36 @@ def CA(FeatVect, NumOfVectors, Dim, NumClust, Center, MaximumIt, Eita_0, MinPts,
     FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
     FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
     
+    # ---------- OUTPUT TO FILES ---------------
+    print(NumClust, file=open('NumClust.txt', 'w'))
+
+    clusterOut = open('OutCluster.txt', 'w')
+    for i in range(0, NumOfVectors):
+        clusterOut.write(str(FeatVect[i].cluster) + '\n')
+    clusterOut.close()
+    
+    centerOut = open('OutCenters.txt', 'w')
+    for i in range(0, NumClust):
+        for j in range(0, Dim):
+            centerOut.write(str(Center[i][j]) + ' ')
+        centerOut.write('\n')
+    centerOut.close()
+
+    # ------------- PLOT --------------
+    
+    fig = plt.figure()
+    ax = plt.axes()
+    x = InData.iloc[:,0]
+    y = InData.iloc[:,1]
+    ax.scatter(x, y)
+    
+    centerCoord = np.zeros(Dim)
+    for i in range(0, NumClust):
+        for j in range(0, Dim):
+            centerCoord[j] = Center[i][j]
+        ax.scatter(centerCoord[0], centerCoord[1], color='red')
+    plt.show()
+
     return(NumClust, Center)
 """
 /**************************************************************************************************/
@@ -216,7 +266,6 @@ def Get_AggCte (FeatVector, NumClust, IterNum, NumOfVectors, Eita_0, TAU, EXPINC
 /**************************************************************************************************/
 """
 def CompMem(FeatVector, NumClust, AggCte, NumOfVectors):
-    TotCard = 0.0
     Card = np.zeros(NumClust)
     
     for j in range(0, NumClust):
