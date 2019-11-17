@@ -36,8 +36,8 @@ if __name__ == '__main__':
     print("End of testing data \n\n\n\n")
 
     startTime = dt.now()
-    EM = ExpectationMaximization(data,clusterCollect)
-    #EM = ExpectationMaximization(data,clusterCollect, testSet=testSetIndexes, classification=testClassification)
+    #EM = ExpectationMaximization(data,clusterCollect)
+    EM = ExpectationMaximization(data,clusterCollect, testSet=testSetIndexes, classification=testClassification)
     endTime = dt.now()
 
     duration = endTime - startTime
@@ -45,3 +45,6 @@ if __name__ == '__main__':
 
     for cluster in EM.clusters:
         print(cluster.mu)
+
+    for set in EM.trainingSets:
+        print(set.cluster)

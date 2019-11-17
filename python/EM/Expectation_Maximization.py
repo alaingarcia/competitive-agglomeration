@@ -131,6 +131,7 @@ class ExpectationMaximization:
         assignedClusters = []
 
         for set in trainingSets:
+            set.cluster = -1
             minValue = math.inf
             bestClus = -1
             for i in range(len(clusters)):
@@ -144,6 +145,7 @@ class ExpectationMaximization:
             for index in set.points:
                 data[index].cluster = bestClus
 
+            set.cluster = bestClus
             assignedClusters.append(bestClus)
 
     #create testSet objects based on data
