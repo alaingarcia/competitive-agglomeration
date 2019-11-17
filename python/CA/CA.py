@@ -42,7 +42,7 @@ class Feature_Info():
 def CA(InData, InCenters,
         MaximumIt=50, Eita_0=2.5, TAU=10, EXPINC=25, 
         EXPDEC=35, EPS=1.0e-6, MAX_CENT_DIFF=0.001,
-        NumClust=10, NumOfVectors=10, Dim=2, m_p=2):
+        NumClust=10, NumOfVectors=60, Dim=2, m_p=2):
     
     # Initialize Data (from InData)
     FeatVect = []
@@ -57,9 +57,6 @@ def CA(InData, InCenters,
     # Initialize Centers (random data from InCenters)
     Center = InCenters.values
 
-    print(InData.head())
-    print(InCenters.head())
-    
     # MinPts are zero vectors ?
     MinPts = np.zeros(MaximumIt)
     MinPts2 = np.ones(MaximumIt)
@@ -81,8 +78,9 @@ def CA(InData, InCenters,
         
         FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
         FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
-        
+
         if (IterNum>2):
+            print("NumClust:{},IterNum:{},NumOfVectors:{},Eita_0:{},TAU:{},EXPINC:{},EXPDEC:{}".format(NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC))
             FeatVector, AggCte = Get_AggCte(FeatVect,NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC)
             print("AggConst={}\n".format(AggCte))
             FeatVector = CompMem(FeatVect, NumClust,AggCte,NumOfVectors)
