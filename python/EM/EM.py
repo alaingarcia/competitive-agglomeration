@@ -191,3 +191,14 @@ class ExpectationMaximization:
         for row in muValues:
             clusters.append(Cluster(row))
         return clusters
+
+    #return objects for EM
+    def info(self):
+        totalClus = len(self.clusters)
+        clusCenters = []
+        for cluster in self.clusters:
+            clusCenters.append(cluster.mu)
+        classifications = []
+        for point in self.dataPoints:
+            classifications.append(point.cluster)
+        return(totalClus, clusCenters, classifications)
