@@ -1,5 +1,5 @@
 from CA import CA
-from EM import Expectation_Maximization
+from EM import EM
 import pandas as pd
 
 
@@ -10,6 +10,5 @@ if __name__ == '__main__':
     #MinClSize = np.zeros((50,2))
 
     # Get results
+    ExMa = EM.ExpectationMaximization(InData, InCenters, rep=50)
     NumClust, Center = CA.CA(InData, InCenters)
-    print
-    
