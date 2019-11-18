@@ -1,6 +1,6 @@
 import numpy as np
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 EPS = 1.0e-6
 MAX_CENT_DIFF = 0.001
