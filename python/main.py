@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # --------------------------EM-----------------------------------------
 
     EM_start_time = time.time_ns()
-    EM_NumClust,EM_OutCenter, EM_Classifications  = EM.ExpectationMaximization(InData.to_numpy().tolist(), InCenters.to_numpy().tolist(), rep=50).info()
+    EM_NumClust,EM_OutCenter, EM_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, pandas=True).info()
     EM_end_time = time.time_ns()
 
     print("EM final number of cluster: {}".format(EM_NumClust))

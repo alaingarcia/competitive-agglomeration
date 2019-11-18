@@ -1,4 +1,5 @@
 import math
+import pandas as pd
 
 class Point:
     def __init__(self, dimArray):
@@ -42,7 +43,10 @@ class TestSet:
 class ExpectationMaximization:
 
     #Complete algorithm in init
-    def __init__(self, data, clusterData, rep=100, testSet=None, classification=None):
+    def __init__(self, data, clusterData, rep=100, testSet=None, classification=None, pandas=False):
+
+        if(pandas):
+            data, clusterData, testSet, classification = pandasConvert(data, clusterData, testSet, classification)
 
         if(len(data[0]) != len(clusterData[0])):
             print("ERROR: points and clusters do not have the same length")
@@ -202,3 +206,12 @@ class ExpectationMaximization:
         for point in self.dataPoints:
             classifications.append(point.cluster)
         return(totalClus, clusCenters, classifications)
+
+    #convert to pandas dataframe
+    def pandasConvert(self,data, clusterData, testSet, classification):
+        data = data.to_numpy().tolist()
+        clusterData = clusterData.to_numpy().tolist()
+        if(testSet and classification):
+            testSet.to_numpy().tolist()
+            classification.to_numpy().tolist()
+        return(data,clusterData, testSet, classification)
