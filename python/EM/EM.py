@@ -90,7 +90,7 @@ class ExpectationMaximization:
         clusterIndex = []
         redo = False
         for i in range(len(pCount)):
-            if(pCount[i] < len(data) * 0.05): # cluster must have at least 5% of the points within or be removed
+            if(pCount[i] < len(data) * (1/len(self.clusters)) * (4/5)): # cluster must have at least 5% of the points within or be removed
                 clusterIndex.append(i)
                 redo = True
 
