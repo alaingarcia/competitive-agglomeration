@@ -46,7 +46,7 @@ class ExpectationMaximization:
     def __init__(self, data, clusterData, rep=100, testSet=None, classification=None, pandas=False):
 
         if(pandas):
-            data, clusterData, testSet, classification = pandasConvert(data, clusterData, testSet, classification)
+            data, clusterData, testSet, classification = self.pandasConvert(data, clusterData, testSet, classification)
 
         if(len(data[0]) != len(clusterData[0])):
             print("ERROR: points and clusters do not have the same length")
