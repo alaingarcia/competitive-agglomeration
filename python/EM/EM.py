@@ -26,8 +26,7 @@ class Cluster:
 
 # holds points and means for each training set
 class TestSet:
-    def __init__(self, group, points, mu):
-        self.group = group
+    def __init__(self, points, mu):
         self.mu = mu
         self.points = points
         self.cluster = -1
@@ -184,7 +183,7 @@ class ExpectationMaximization:
             if count != 0:
                 for i in range(len(mu)):
                     mu[i] = mu[i] / count
-                testSets.append(TestSet(group, indexCollector, mu))
+                testSets.append(TestSet(indexCollector, mu))
 
         return testSets
 
