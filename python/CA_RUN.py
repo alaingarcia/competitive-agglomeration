@@ -1,4 +1,5 @@
 from CA import CA
+from CA import CA_PBTR
 from EM import EM
 import pandas as pd
 import numpy as np
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     # --------------------------CA-----------------------------------------
     print("Starting CA Algorithm:")
     CA_start_time = time.time_ns()
-    CA_NumClust, CA_OutCenter, CA_Classifications = CA.CA(InData, InCenters, MaximumIt=Iterations, NumClust=NumClust, NumOfVectors=NumOfVectors)
+    CA_NumClust, CA_OutCenter, CA_Classifications = CA_PBTR.CA(InData, InCenters, MaximumIt=Iterations, NumClust=NumClust, NumOfVectors=NumOfVectors)
     CA_end_time = time.time_ns()
 
     # Print results

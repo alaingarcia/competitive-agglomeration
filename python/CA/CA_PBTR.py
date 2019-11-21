@@ -1,6 +1,6 @@
 import numpy as np
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 EPS = 1.0e-6
 MAX_CENT_DIFF = 0.001
@@ -42,12 +42,12 @@ class Feature_Info():
 def CA(InData, InCenters,
         MaximumIt=50, Eita_0=2.5, TAU=10, EXPINC=25, 
         EXPDEC=35, EPS=1.0e-6, MAX_CENT_DIFF=0.001,
-        NumClust=10, NumOfVectors=10, Dim=2, m_p=2):
+        NumClust=10, NumOfVectors=60, Dim=2, m_p=2):
     
     # Initialize Data (from InData)
     FeatVect = []
     for i in range(0, NumOfVectors):
-        FeatVect.insert(i,CA.Feature_Info(np.zeros(NumClust), 
+        FeatVect.insert(i,Feature_Info(np.zeros(NumClust), 
                         np.zeros(NumClust), np.zeros(Dim), None))
     # Populate
     for i in range(0, Dim):
@@ -74,16 +74,16 @@ def CA(InData, InCenters,
             PreviousCenter[i][j] = Center[i][j]
 
     while (IterNum < MaximumIt):
-        print("IterNum={}\n".format(IterNum))
+        #print("IterNum={}\n".format(IterNum))
         
         FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
         FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
-        
+
         if (IterNum>2):
             FeatVector, AggCte = Get_AggCte(FeatVect,NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC)
-            print("AggConst={}\n".format(AggCte))
+            #print("AggConst={}\n".format(AggCte))
             FeatVector = CompMem(FeatVect, NumClust,AggCte,NumOfVectors)
-            FeatVector, NumClust, MinPts, MinPts2 = UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2)
+            #FeatVector, NumClust, MinPts, MinPts2 = UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2)
         else:
             FeatVector = FuzzMem(FeatVect, NumClust, NumOfVectors)
         
@@ -98,7 +98,7 @@ def CA(InData, InCenters,
             break
         
         IterNum += 1 
-        print("[It# {}]Num. Clust={}\n".format(IterNum,NumClust))
+        #print("[It# {}]Num. Clust={}\n".format(IterNum,NumClust))
         PreviousNumClust = NumClust
 
 		# Copy the centers into the previous centers
@@ -109,6 +109,16 @@ def CA(InData, InCenters,
     FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
     FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
     
+    Classifications = []
+    for i in range(0, NumOfVectors):
+        Classifications.append(FeatVect[i].cluster)
+
+    OutCenters = []
+    for i in range(0, NumClust):
+        OutCenters.append([])
+        for j in range(0, Dim):
+            OutCenters[i].append(Center[i][j])
+    """
     # ---------- OUTPUT TO FILES ---------------
     print(NumClust, file=open('NumClust.txt', 'w'))
 
@@ -138,35 +148,9 @@ def CA(InData, InCenters,
             centerCoord[j] = Center[i][j]
         ax.scatter(centerCoord[0], centerCoord[1], color='red')
     plt.show()
+    """
 
-    return(NumClust, Center)
-
-"""
-PBTR IMPLEMENTATION
-INPUT:
-    Training:      Contains exemplary vectors to help realign.
-    FeatVector:    A structure containing the feature vectors.
-    NumClust:      Total number of clusters.
-    Center:        Centers of all clusters.
-    NumOfVectors:  Total number of feature vectors.
-    Dim:			Total number of dimensions.
-
-OUTPUT:
-    FeatVector
-    NumOfVectors
-"""
-def PBTR(TrainingData, FeatVector, NumClust, Center, NumOfVectors, Dim):
-    
-    # Initialize Data (from TrainingData)
-    for i in range(0, NumOfVectors):
-        FeatVector.insert(i,CA.Feature_Info(np.zeros(NumClust), 
-                        np.zeros(NumClust), np.zeros(Dim), None))
-    # Populate
-    for i in range(0, Dim):
-        for j in range(0, NumOfVectors):
-            FeatVector[j].dimen[i] = TrainingData.iloc[j,i]
-    return FeatVector, NumOfVectors
-
+    return(NumClust, OutCenters, Classifications)
 """
 /**************************************************************************************************/
 /*** This procedure computes the Euclidean distance of all feature vectors						***/
@@ -372,8 +356,8 @@ def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2
         if (Card[i] <= MinPts[IterNum]) or (Card2[i] <= MinPts2[IterNum]):
             Empty_clust[i] = 1
 
-        if IterNum >= 3:
-            print('{} ===> Card[{}] = {}   Card2[{}] = {}\n'.format(IterNum, i, Card[i], i, Card2[i]))
+        #if IterNum >= 3:
+            #print('{} ===> Card[{}] = {}   Card2[{}] = {}\n'.format(IterNum, i, Card[i], i, Card2[i]))
 
     for i in range(0, NumClust):
         if Empty_clust[i] == 0:
@@ -467,3 +451,34 @@ def InitCenters (Center, FeatVect, NumClust, NumOfVectors, Dim):
             index = j * NumOfVectors/NumClust
             Center[j][k] = FeatVect[index].dimen[k]
     return(Center, FeatVect)
+
+"""
+PBTR IMPLEMENTATION
+INPUT:
+    Training:               Contains exemplary vectors to help realign.
+    FeatVector:             A structure containing the feature vectors.
+    NumClust:              Total number of clusters.
+    Center:                 Centers of all clusters.
+    NumOfVectors:           Total number of feature vectors.
+    NumOfTrainingVectors:   Total number of training vectors.
+    Dim:			Total number of dimensions.
+
+OUTPUT:
+    FeatVector
+    NumOfVectors
+"""
+def PBTR(TrainingData, FeatVector, NumClust, Center, NumOfVectors, NumOfTrainingVectors, Dim):
+
+    # Initialize Data (from TrainingData)
+    for i in range(0, NumOfTrainingVectors):
+        FeatVector.insert(i,Feature_Info(np.zeros(NumClust), 
+                        np.zeros(NumClust), np.zeros(Dim), None))
+    # Populate
+    for i in range(0, Dim):
+        for j in range(0, NumOfTrainingVectors):
+            FeatVector[j].dimen[i] = TrainingData.iloc[j,i]
+
+    NumOfVectors += NumOfTrainingVectors
+
+
+    return FeatVector, NumOfVectors
