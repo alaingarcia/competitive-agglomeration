@@ -47,12 +47,28 @@ if __name__ == '__main__':
     # print("EM_trained cluster centers: {}".format(EM_train_OutCenter))
     # print("EM_trained classification vector: {}".format(EM_train_Classifications))
 
+    out = open('EM_train_OutCenter.csv', 'w')
+    for row in EM_train_OutCenter:
+        for column in row:
+            out.write('%d;' % column)
+        out.write('\n')
+    out.close()
+
     print("EM_trained time: {} ms".format(EM_train_time))
     print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
+
+
 
     print("EM final number of cluster: {}".format(EM_NumClust))
     # print("EM cluster centers: {}".format(EM_OutCenter))
     # print("EM classification vector: {}".format(EM_Classifications))
+
+    out = open('EM_OutCenter.csv', 'w')
+    for row in EM_OutCenter:
+        for column in row:
+            out.write('%d;' % column)
+        out.write('\n')
+    out.close()
 
     print("EM time: {} ms".format(EM_time))
     print("EM accuracy: {}%\n\n".format(EM_accuracy*100))
