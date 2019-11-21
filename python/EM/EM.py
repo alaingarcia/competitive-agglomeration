@@ -54,6 +54,8 @@ class ExpectationMaximization:
 
         if(testSet and classification): #testSet and classification has value
             self.trainingSets = self.trainingSetsCreation(data, testSet, classification)
+        else:
+            self.trainingSets = None
         self.dataPoints = self.pointCreation(data)
         self.clusters = self.clusterCreation(clusterData)
 
@@ -67,7 +69,7 @@ class ExpectationMaximization:
             if(testSet and classification):
                 self.Train(self.clusters, self.dataPoints, self.trainingSets)
                 self.M_step(self.clusters, self.dataPoints)
-            print(i)
+            print(i, len(self.clusters))
 
     #Expectation Step
     def E_step(self, clusters, data):
@@ -94,10 +96,13 @@ class ExpectationMaximization:
         # check if any clusters have less than 5% of available points
         clusterIndex = []
         redo = False
-        for i in range(len(pCount)):
-            if(pCount[i] < len(data) * 0.10): # cluster must have at least 5% of the points within or be removed
-                clusterIndex.append(i)
-                redo = True
+        if(self.trainingSets == None or len(self.clusters) > len(self.trainingSets)):
+            print("pruning")
+            for i in range(len(pCount)): #changed so only 1 cluster would be removed each repetition
+                if(pCount[i] < len(data) * 0.07): # cluster must have at least 7% of the points within or be removed
+                    clusterIndex.append(i)
+                    redo = True
+                    break
 
 
         # delete clusters if necessary
