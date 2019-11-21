@@ -44,15 +44,15 @@ if __name__ == '__main__':
     EM_accuracy = accuracy(actual_classification_vector,EM_Classifications)
 
     print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
-    print("EM_trained cluster centers: {}".format(EM_train_OutCenter))
-    print("EM_trained classification vector: {}".format(EM_train_Classifications))
+    # print("EM_trained cluster centers: {}".format(EM_train_OutCenter))
+    # print("EM_trained classification vector: {}".format(EM_train_Classifications))
 
-    print("EM time: {} ms".format(EM_train_time))
-    print("EM accuracy: {}%\n\n".format(EM_train_accuracy*100))
+    print("EM_trained time: {} ms".format(EM_train_time))
+    print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
 
     print("EM final number of cluster: {}".format(EM_NumClust))
-    print("EM cluster centers: {}".format(EM_OutCenter))
-    print("EM classification vector: {}".format(EM_Classifications))
+    # print("EM cluster centers: {}".format(EM_OutCenter))
+    # print("EM classification vector: {}".format(EM_Classifications))
 
     print("EM time: {} ms".format(EM_time))
     print("EM accuracy: {}%\n\n".format(EM_accuracy*100))
