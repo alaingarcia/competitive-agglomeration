@@ -140,6 +140,33 @@ def CA(InData, InCenters,
     plt.show()
 
     return(NumClust, Center)
+
+"""
+PBTR IMPLEMENTATION
+INPUT:
+    Training:      Contains exemplary vectors to help realign.
+    FeatVector:    A structure containing the feature vectors.
+    NumClust:      Total number of clusters.
+    Center:        Centers of all clusters.
+    NumOfVectors:  Total number of feature vectors.
+    Dim:			Total number of dimensions.
+
+OUTPUT:
+    FeatVector
+    NumOfVectors
+"""
+def PBTR(TrainingData, FeatVector, NumClust, Center, NumOfVectors, Dim):
+    
+    # Initialize Data (from TrainingData)
+    for i in range(0, NumOfVectors):
+        FeatVector.insert(i,CA.Feature_Info(np.zeros(NumClust), 
+                        np.zeros(NumClust), np.zeros(Dim), None))
+    # Populate
+    for i in range(0, Dim):
+        for j in range(0, NumOfVectors):
+            FeatVector[j].dimen[i] = TrainingData.iloc[j,i]
+    return FeatVector, NumOfVectors
+
 """
 /**************************************************************************************************/
 /*** This procedure computes the Euclidean distance of all feature vectors						***/
