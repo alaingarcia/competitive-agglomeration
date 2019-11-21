@@ -105,12 +105,11 @@ class ExpectationMaximization:
                     if(clusterIndex == None or pCount[i] < numP):
                         clusterIndex = i
                         numP = pCount[i]
-                        redo = True
 
         # delete clusters if necessary
         if(redo):
             clusters.pop(clusterIndex)
-            
+
             # reassign points
             for point in data:
                 minValue = math.inf
