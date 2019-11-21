@@ -94,22 +94,23 @@ class ExpectationMaximization:
                     exit()
 
         # check if any clusters have less than 5% of available points
-        clusterIndex = []
+        clusterIndex = None
+        numP = None
         redo = False
         if(self.trainingSets == None or len(self.clusters) > len(self.trainingSets)):
             print("pruning")
             for i in range(len(pCount)): #changed so only 1 cluster would be removed each repetition
                 if(pCount[i] < len(data) * 0.07): # cluster must have at least 7% of the points within or be removed
-                    clusterIndex.append(i)
                     redo = True
-                    break
-
+                    if(clusterIndex == None or pCount[i] < numP):
+                        clusterIndex = i
+                        numP = pCount[i]
+                        redo = True
 
         # delete clusters if necessary
         if(redo):
-            for i in range(len(clusterIndex) - 1, 0 - 1, -1):
-                clusters.pop(clusterIndex[i])
-
+            clusters.pop(clusterIndex)
+            
             # reassign points
             for point in data:
                 minValue = math.inf
