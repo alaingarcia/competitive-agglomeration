@@ -1,18 +1,9 @@
 from CA import CA
-from CA import CA_PBTR
-from EM import EM
+from accuracy import matrixAccuracy
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-
-
-def accuracy(actual_classification_vector, attempt_classification_vector):
-    correct = 0
-    for i in range(0, len(actual_classification_vector)):
-        if actual_classification_vector[i] == attempt_classification_vector[i]:
-            correct += 1
-    return correct/len(actual_classification_vector)
 
 def plot(InData, NumClust1, OutCenter1, NumClust2=None, OutCenter2=None, Dim=2, color=("red","black")):
     fig = plt.figure()
@@ -45,11 +36,12 @@ if __name__ == '__main__':
     InCenters = InCenters[0:NumClust]
     actual_classification_file = pd.read_csv("data/training/a1-ga.csv", header=None)
     actual_classification_vector = actual_classification_file[0].tolist()
+    actual_clusters = pd.read_csv("data/training/a1-ga-cb.csv", header=None)
 
     # --------------------------CA-----------------------------------------
     print("Starting CA Algorithm:")
     CA_start_time = time.time_ns()
-    CA_NumClust, CA_OutCenter, CA_Classifications = CA_PBTR.CA(InData, InCenters, MaximumIt=Iterations, NumClust=NumClust, NumOfVectors=NumOfVectors)
+    CA_NumClust, CA_OutCenter, CA_Classifications = CA.CA(InData, InCenters, MaximumIt=Iterations, NumClust=NumClust, NumOfVectors=NumOfVectors)
     CA_end_time = time.time_ns()
 
     # Print results
@@ -60,10 +52,17 @@ if __name__ == '__main__':
     # Convert ns to ms
     CA_time = (CA_end_time-CA_start_time)/1e6
 
+    #pd.DataFrame(CA_OutCenter).to_csv('CA_OutCenter.csv', index=False)
+    #pd.DataFrame(CA_Classifications).to_csv('CA_Classifications.csv', index=False)
 
-    CA_accuracy = accuracy(actual_classification_vector,CA_Classifications)
-
+    #CA_accuracy = matrixAccuracy(actual_clusters, actual_classV, attempt_clusters, attempt_classV)
     print("CA time: {} ms".format(CA_time))
-    print("CA accuracy: {}%\n".format(CA_accuracy*100))
+    #print("CA accuracy: {}%\n".format(CA_accuracy*100))
+
+    all_data = pd.concat([InData, actual_classification_file, pd.DataFrame(CA_Classifications)], axis=1)
+    all_data.to_csv("all_data.csv")
+
+    cluster_data = pd.concat([actual_clusters, pd.DataFrame(CA_OutCenter)], axis=1)
+    cluster_data.to_csv("cluster_data.csv", index=False)
 
     plot(InData, CA_NumClust, CA_OutCenter)

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 
 class HashTable:
@@ -8,17 +9,17 @@ class HashTable:
 
     def insert(self, key, value):
         self.keys.append(key)
-        self.values.append(values)
+        self.values.append(value)
 
     def search(self, key):
         for i in range(len(self.keys)):
-            if(self.keys[i] = keys):
+            if(self.keys[i] == key):
                 return self.values[i]
         return None
 
     def has(self, key):
         for i in range(len(self.keys)):
-            if(self.keys[i] = keys):
+            if(self.keys[i] == key):
                 return True
         return False
 
@@ -28,7 +29,7 @@ class HashTable:
     def getKeys(self, value):
         keys = []
         for i in range(len(self.values)):
-            if(self.values[i] = value):
+            if(self.values[i] == value):
                 keys.append(self.keys[i])
         if(keys == []):
             return None
@@ -54,16 +55,16 @@ def matrixAccuracy(actual_clusters, actual_classV, attempt_clusters, attempt_cla
 
     #1 - For each Determined cluster, find the index of the points that are attached to it
     indexCollector = []
-    for i in range(EM_NumClust): # i is the cluster
-        for j in range(len(EM_Classification)): # j is the index of the points
-            if(i == EM_Classification[j]): # if the classification of this point is the current cluster
+    for i in range(len(attempt_clusters)): # i is the cluster
+        for j in range(len(attempt_classV)): # j is the index of the points
+            if(i == attempt_classV[j]): # if the classification of this point is the current cluster
                 indexCollector.append(j)
 
     #2 - Creates and fills matrix
-    matrix = np.zeros(len(attempt_clusters), len(actual_clusters))
+    matrix = np.zeros((len(attempt_clusters), len(actual_clusters)))
     for i in range(len(attempt_clusters)):
-        for j in range(len(actual_attempt_clusters)):
-            matrix[i][j] = clusterDistance(actual_clusters[i],attempt_clusters[j])
+        for j in range(len(actual_clusters)):
+            matrix[i][j] = clusterDistance(attempt_clusters[i],actual_clusters[j])
 
     #3 - Use matrix to check which clusters belongs to which other
     HashCompare = HashTable() # determined cluster to true cluster
@@ -71,8 +72,8 @@ def matrixAccuracy(actual_clusters, actual_classV, attempt_clusters, attempt_cla
         min_i = -1
         min_j = -1
         value = None
-        for i in range(matrix):
-            for j in range(matrix[i]):
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[1]):
                 if(value == None or matrix[i][j] < value):
                     value = matrix[i][j]
                     min_i = i
@@ -97,4 +98,4 @@ def matrixAccuracy(actual_clusters, actual_classV, attempt_clusters, attempt_cla
     for i in range(len(actual_classV)):
         if actual_classV[i] == filtered_classification[i]:
             correct += 1
-    return correct/len(actual_classification_vector)
+    return correct/len(actual_classV)
