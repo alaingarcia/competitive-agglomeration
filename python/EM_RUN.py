@@ -20,43 +20,45 @@ from accuracy import matrixAccuracy
 if __name__ == '__main__':
 
     #-------------------------small db-------------------------------------
-    # InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
-    # InCenters = InCenters.to_numpy().tolist()
-    #
-    # InData = pd.read_csv('data/training/a1.csv', header=None)
-    # InData = InData.to_numpy().tolist()
-    #
-    # NumClust=25
-    # Iterations=50
-    # NumOfVectors=3000
-    # InCenters = InCenters[0:NumClust]
-    #
-    # actual_classification_file = pd.read_csv("data/training/a1-ga.csv", header=None)
-    # actual_classification_vector = actual_classification_file[0].tolist()
-    #
-    # actual_clusters = pd.read_csv("data/training/a1-ga-cb.csv", header=None)
-    # actual_clusters = actual_clusters.to_numpy().tolist()
-
-    #--------------------------Large DB-------------------------------------
-
-    InData = pd.read_csv('data/mnist_csv.csv', header=None)
-
-    actual_classV = InData.iloc[:,-1]
-    actual_classification_vector = actual_classV.tolist()
-
-    tFile = open("./data/trainingMNIST.txt")
-    trainIndexes = [int(i) for i in tFile.readlines()]
-    tFile.close()
-
-
-    InData = InData.iloc[:,:-1]
-    InData = InData.to_numpy().tolist()
-    InCenters = pd.read_csv('data/mnistCenterPoints.csv', header=None)
+    InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
     InCenters = InCenters.to_numpy().tolist()
 
-    actual_clusters = pd.read_csv("./data/averageTrue.csv")
-    actual_clusters = actual_clusters.iloc[:,:-1]
+    InData = pd.read_csv('data/training/a1.csv', header=None)
+    InData = InData.to_numpy().tolist()
+
+    NumClust=25
+    Iterations=50
+    NumOfVectors=3000
+    InCenters = InCenters[0:NumClust]
+
+    actual_classification_file = pd.read_csv("data/training/a1-ga.csv", header=None)
+    actual_classification_vector = actual_classification_file[0].tolist()
+
+    actual_clusters = pd.read_csv("data/training/a1-ga-cb.csv", header=None)
     actual_clusters = actual_clusters.to_numpy().tolist()
+
+    trainIndexes = pd.read_csv("data/training/training_index.csv", header=None)
+    trainIndexes = trainIndexes[0].tolist()
+    #--------------------------Large DB-------------------------------------
+
+    # InData = pd.read_csv('data/mnist_csv.csv', header=None)
+    #
+    # actual_classV = InData.iloc[:,-1]
+    # actual_classification_vector = actual_classV.tolist()
+    #
+    # tFile = open("./data/trainingMNIST.txt")
+    # trainIndexes = [int(i) for i in tFile.readlines()]
+    # tFile.close()
+    #
+    #
+    # InData = InData.iloc[:,:-1]
+    # InData = InData.to_numpy().tolist()
+    # InCenters = pd.read_csv('data/mnistCenterPoints.csv', header=None)
+    # InCenters = InCenters.to_numpy().tolist()
+    #
+    # actual_clusters = pd.read_csv("./data/averageTrue.csv")
+    # actual_clusters = actual_clusters.iloc[:,:-1]
+    # actual_clusters = actual_clusters.to_numpy().tolist()
 
 
     #--------------------------EM-----------------------------------------
