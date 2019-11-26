@@ -43,7 +43,6 @@ class ExpectationMaximization:
 
     #Complete algorithm in init
     def __init__(self, data, clusterData, rep=100, testSet=None, classification=None, pandas=False):
-
         if(pandas):
             data, clusterData = self.pandasConvert(data, clusterData)
 
@@ -93,21 +92,31 @@ class ExpectationMaximization:
                     exit()
 
         # check if any clusters have less than 5% of available points
+        smallClusterICollect = []
         clusterIndex = None
         numP = None
         redo = False
+        minFound = False
         if(self.trainingSets == None or len(self.clusters) > len(self.trainingSets)):
             print("pruning")
-            for i in range(len(pCount)): #changed so only 1 cluster would be removed each repetition
-                if(pCount[i] < len(data) * 0.07): # cluster must have at least 7% of the points within or be removed
+            for i in range(len(pCount)): #changed so only 1 cluster would be removed each repetition or zero inputs
+                if(pCount[i] < len(data) * 0.08 * 1/len(clusters)): # cluster must have at least 7% of the points within or be removed
                     redo = True
-                    if(clusterIndex == None or pCount[i] < numP):
+                    if(pCount[i] == 0):
+                        smallClusterICollect.append(i)
+                    elif(clusterIndex == None or pCount[i] < numP):
+                        minFound = True
                         clusterIndex = i
                         numP = pCount[i]
+            if(minFound):
+                smallClusterICollect.append(clusterIndex)
+
 
         # delete clusters if necessary
         if(redo):
-            clusters.pop(clusterIndex)
+            smallClusterICollect.sort()
+            for i in range(len(smallClusterICollect)-1,-1,-1):
+                clusters.pop(smallClusterICollect[i])
 
             # reassign points
             for point in data:
@@ -213,7 +222,7 @@ class ExpectationMaximization:
         return(totalClus, clusCenters, classifications)
 
     #convert to pandas dataframe
-    def pandasConvert(self,data, clusterData):
+    def pandasConvert(self, data, clusterData):
         data = data.to_numpy().tolist()
         clusterData = clusterData.to_numpy().tolist()
         return(data, clusterData)
