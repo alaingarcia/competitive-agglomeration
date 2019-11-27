@@ -9,8 +9,8 @@ def EM_RUN():
     InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
     InCenters = InCenters.to_numpy().tolist()
 
-    InData = pd.read_csv('data/training/a1.csv', header=None)
-    InData = InData.to_numpy().tolist()
+    InData_origin = pd.read_csv('data/training/a1.csv', header=None)
+    InData = InData_origin.to_numpy().tolist()
 
     NumClust=25
     Iterations=50
@@ -49,11 +49,11 @@ def EM_RUN():
 
     #--------------------------EM-----------------------------------------
 
-    EM_train_start_time = time.time_ns()
-    EM_train_NumClust,EM_train_OutCenter, EM_train_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, testSet=trainIndexes, classification=actual_classification_vector).info()
-    EM_train_end_time = time.time_ns()
-    EM_train_time = (EM_train_end_time-EM_train_start_time)/1e6
-    EM_train_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, EM_train_OutCenter, EM_train_Classifications)
+    # EM_train_start_time = time.time_ns()
+    # EM_train_NumClust,EM_train_OutCenter, EM_train_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, testSet=trainIndexes, classification=actual_classification_vector).info()
+    # EM_train_end_time = time.time_ns()
+    # EM_train_time = (EM_train_end_time-EM_train_start_time)/1e6
+    # EM_train_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, EM_train_OutCenter, EM_train_Classifications)
 
     EM_start_time = time.time_ns()
     EM_NumClust,EM_OutCenter, EM_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50).info()
@@ -63,11 +63,9 @@ def EM_RUN():
     #
     # # print("EM_trained cluster centers: {}".format(EM_train_OutCenter))
     # # print("EM_trained classification vector: {}".format(EM_train_Classifications))
-    print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
-    print("EM_trained time: {} ms".format(EM_train_time))
-    print(EM_OutCenter)
-    print(EM_Classifications)
-    print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
+    # print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
+    # print("EM_trained time: {} ms".format(EM_train_time))
+    # print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
 
     # print("EM cluster centers: {}".format(EM_OutCenter))
     # print("EM classification vector: {}".format(EM_Classifications))
