@@ -65,6 +65,8 @@ def EM_RUN():
     # # print("EM_trained classification vector: {}".format(EM_train_Classifications))
     print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
     print("EM_trained time: {} ms".format(EM_train_time))
+    print(EM_OutCenter)
+    print(EM_Classifications)
     print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
 
     # print("EM cluster centers: {}".format(EM_OutCenter))
