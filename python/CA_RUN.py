@@ -18,7 +18,7 @@ def CA_RUN(cluster_num=100, iterations=50):
     print("Starting CA Algorithm:")
     CA_start_time = time.time_ns()
     CA_cluster_num, CA_center_list, CA_classification_list = CA.CA(in_data, in_centers, max_iterations=iterations, cluster_num=cluster_num, vector_num=vector_num)
-    CA_end_time = time.time_ns()
+    CA_end_time = time.clock_gettime_ns()
 
     """
     print("CA final number of cluster: {}".format(CA_cluster_num))
