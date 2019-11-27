@@ -35,7 +35,7 @@ Returns final number of cluster, final cluster center locations, and final point
 """
 def CA(in_data, in_centers,
         max_iterations=50, cluster_num=10, vector_num=60, dimensions=2,
-        Eita_0=2.5, TAU=10, EXPINC=25, EXPDEC=35, 
+        EITA=2.5, TAU=10, EXPINC=25, EXPDEC=35, 
         MAX_CENTER_DIFFERENCE=0.001, fuzzifier=2):
     
     # Initialize Data (from in_data)
@@ -77,7 +77,7 @@ def CA(in_data, in_centers,
 
         # If at least three iterations have not occurred, calculate membership using Fuzzy Algorithm
         if (iteration_num > 2):
-            agglomeration_constant = AgglomerationConstant(point_list, cluster_num, iteration_num, vector_num, Eita_0, TAU, EXPINC, EXPDEC)
+            agglomeration_constant = AgglomerationConstant(point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC)
             Membership(point_list, cluster_num, agglomeration_constant, vector_num)
             cluster_num = ClusterNumber(point_list, cluster_num, iteration_num, vector_num, mimimum_points, mimimum_points2)
         else:
@@ -138,6 +138,7 @@ def EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, 
 # Assign points to the closest avaiable cluster
 def AssignPoints(point_list, cluster_num, vector_num):
     for i in range(0, vector_num):
+        # Find the smallest distance, start min as "infinity" and find smaller values as they appear
         min = INFINITY
         for j in range(0, cluster_num):
             if point_list[i].distance[j] < min:
@@ -146,7 +147,7 @@ def AssignPoints(point_list, cluster_num, vector_num):
             point_list[i].cluster = index
 
 # Calculates the agglomeration constant which controls the rate at which clusters are pruned
-def AgglomerationConstant (point_list, cluster_num, iteration_num, vector_num, Eita_0, TAU, EXPINC, EXPDEC):
+def AgglomerationConstant (point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC):
     objective_function, cardinality_sum = 0, 0
     cardinality = np.zeros(cluster_num)
 
@@ -159,13 +160,13 @@ def AgglomerationConstant (point_list, cluster_num, iteration_num, vector_num, E
         cardinality_sum += cardinality[i] * cardinality[i]
 
     if (iteration_num < EXPINC):
-        Exponent = (iteration_num - EXPINC)/TAU  
+        exponent = (iteration_num - EXPINC)/TAU  
     elif (iteration_num < EXPDEC):
-        Exponent = 0
+        exponent = 0
     else:
-        Exponent = (EXPDEC - iteration_num) / TAU
+        exponent = (EXPDEC - iteration_num) / TAU
     
-    alpha = Eita_0 * math.exp(Exponent) * objective_function/cardinality_sum
+    alpha = EITA * math.exp(exponent) * objective_function/cardinality_sum
     
     return alpha
 

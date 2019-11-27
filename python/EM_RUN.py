@@ -1,24 +1,10 @@
-from CA import CA
 from EM import EM
 import pandas as pd
 import numpy as np
-#import matplotlib.pyplot as plt
 import time
 from accuracy import matrixAccuracy
 
-
-# def accuracy(actual_classification_vector, attempt_classification_vector):
-#     correct = 0
-#     for i in range(0, len(actual_classification_vector)):
-#         if actual_classification_vector[i] == attempt_classification_vector[i]:
-#             correct += 1
-#     return correct/len(actual_classification_vector)
-
-
-
-
-if __name__ == '__main__':
-
+def EM_RUN():
     #-------------------------small db-------------------------------------
     InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
     InCenters = InCenters.to_numpy().tolist()
@@ -87,5 +73,8 @@ if __name__ == '__main__':
     print("EM time: {} ms".format(EM_time))
     print("EM accuracy: {}%\n\n".format(EM_accuracy*100))
 
-
     #---------------determine matrix for assigning clusters--------------------
+    return (EM_NumClust, EM_OutCenter)
+
+if __name__ == '__main__':
+    EM_RUN()
