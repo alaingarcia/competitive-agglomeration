@@ -16,17 +16,17 @@ def CA_RUN(cluster_num=100, iterations=50):
 
     # --------------------------CA-----------------------------------------
     print("Starting CA Algorithm:")
-    CA_start_time = time.clock_gettime_ns()
+    CA_start_time = int(round(time.time() * 1000))
     CA_cluster_num, CA_center_list, CA_classification_list = CA.CA(in_data, in_centers, max_iterations=iterations, cluster_num=cluster_num, vector_num=vector_num)
-    CA_end_time = time.clock_gettime_ns()
+    CA_end_time = int(round(time.time() * 1000))
 
     """
     print("CA final number of cluster: {}".format(CA_cluster_num))
     print("CA cluster centers: {}".format(CA_center_list))
     print("CA classification vector: {}".format(CA_classification_list))
     """
-    # Convert ns to ms
-    CA_time = (CA_end_time-CA_start_time)/1e6
+
+    CA_time = (CA_end_time-CA_start_time)
 
     #CA_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, CA_center_list, CA_classification_list)
     print(cluster_num)
