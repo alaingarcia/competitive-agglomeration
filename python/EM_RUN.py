@@ -2,19 +2,30 @@ from CA import CA
 from EM import EM
 import pandas as pd
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import time
 from accuracy import matrixAccuracy
 
+def plot(InData, NumClust1, OutCenter1, NumClust2=None, OutCenter2=None, Dim=2, color=("orange","black")):
+    fig = plt.figure()
+    ax = plt.axes()
+    x = InData.iloc[:,0]
+    y = InData.iloc[:,1]
+    ax.scatter(x, y,s=1)
 
-# def accuracy(actual_classification_vector, attempt_classification_vector):
-#     correct = 0
-#     for i in range(0, len(actual_classification_vector)):
-#         if actual_classification_vector[i] == attempt_classification_vector[i]:
-#             correct += 1
-#     return correct/len(actual_classification_vector)
+    centerCoord1 = np.zeros(Dim)
+    for i in range(0, NumClust1):
+        for j in range(0, Dim):
+            centerCoord1[j] = OutCenter1[i][j]
+        ax.scatter(centerCoord1[0], centerCoord1[1], color=color[0])
 
-
+    if(NumClust2 and OutCenter2):
+        centerCoord2 = np.zeros(Dim)
+        for i in range(0, NumClust2):
+            for j in range(0, Dim):
+                centerCoord2[j] = OutCenter2[i][j]
+            ax.scatter(centerCoord2[0], centerCoord2[1], color=color[1])
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -23,8 +34,8 @@ if __name__ == '__main__':
     InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
     InCenters = InCenters.to_numpy().tolist()
 
-    InData = pd.read_csv('data/training/a1.csv', header=None)
-    InData = InData.to_numpy().tolist()
+    InData_origin = pd.read_csv('data/training/a1.csv', header=None)
+    InData = InData_origin.to_numpy().tolist()
 
     NumClust=25
     Iterations=50
@@ -63,11 +74,11 @@ if __name__ == '__main__':
 
     #--------------------------EM-----------------------------------------
 
-    EM_train_start_time = time.time_ns()
-    EM_train_NumClust,EM_train_OutCenter, EM_train_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, testSet=trainIndexes, classification=actual_classification_vector).info()
-    EM_train_end_time = time.time_ns()
-    EM_train_time = (EM_train_end_time-EM_train_start_time)/1e6
-    EM_train_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, EM_train_OutCenter, EM_train_Classifications)
+    # EM_train_start_time = time.time_ns()
+    # EM_train_NumClust,EM_train_OutCenter, EM_train_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, testSet=trainIndexes, classification=actual_classification_vector).info()
+    # EM_train_end_time = time.time_ns()
+    # EM_train_time = (EM_train_end_time-EM_train_start_time)/1e6
+    # EM_train_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, EM_train_OutCenter, EM_train_Classifications)
 
     EM_start_time = time.time_ns()
     EM_NumClust,EM_OutCenter, EM_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50).info()
@@ -77,9 +88,9 @@ if __name__ == '__main__':
     #
     # # print("EM_trained cluster centers: {}".format(EM_train_OutCenter))
     # # print("EM_trained classification vector: {}".format(EM_train_Classifications))
-    print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
-    print("EM_trained time: {} ms".format(EM_train_time))
-    print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
+    # print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
+    # print("EM_trained time: {} ms".format(EM_train_time))
+    # print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
 
     # print("EM cluster centers: {}".format(EM_OutCenter))
     # print("EM classification vector: {}".format(EM_Classifications))
@@ -88,4 +99,6 @@ if __name__ == '__main__':
     print("EM accuracy: {}%\n\n".format(EM_accuracy*100))
 
 
-    #---------------determine matrix for assigning clusters--------------------
+    #------------------------Show plot(if 2D)-----------------------------
+
+    plot(InData_origin, EM_NumClust, EM_OutCenter)
