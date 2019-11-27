@@ -1,453 +1,283 @@
+"""
+Competitive Agglomeration Algorithm
+
+Algorithm by:   Hichem Frigui and Raghu Krsihnapuram
+Python Code:    Alain Garcia
+"""
+
 import numpy as np
 import math
-#import matplotlib.pyplot as plt
 
-EPS = 1.0e-6
-MAX_CENT_DIFF = 0.001
+# Smallest number to be considered significant
+EPSILON = 1.0e-6
+
+# Largest number to be considered
 INFINITY = 1.0e35
 
-class Feature_Info():
-    def __init__(self, memship, dist, dimen, cluster):
-        self.memship = memship
-        self.dist = dist
-        self.dimen = dimen
+"""
+Point(): Object used to store points
+membership: A vector that holds membership for all clusters
+distance:   A vector that holds distance from all clusters
+dimension:  A vector that holds all the data for a certain point, separated by dimension
+cluster:    Currently assigned cluster
+"""
+class Point():
+    def __init__(self, membership, distance, dimension, cluster):
+        self.membership = membership
+        self.distance = distance
+        self.dimension = dimension
         self.cluster = cluster
 
 """
-/**************************************************************************************************/
-/***  This file contains procedures that perform fuzzy clustering with aglomeration (CA).		***/
-/***  These include:  CA.							***/
-/***         																					***/
-/***  		Author:               Hichem FRIGUI													***/
-/***        Date last updated:    September 28th 2005											***/
-/**************************************************************************************************/
-
-
-/**************************************************************************************************/
-/***  This procedure implements the CA algorithm.												***/
-/***																							***/
-/***	INPUT:																					***/
-/***	   FeatVect:  A structure that holds all feature vectors. 								***/
-/***	   NumClust:  Total number of clusters.													***/
-/***	   m:	      fuzzifier.																***/
-/***	   Center:    Initial set of centers.  If not included centers will be initialized.		***/
-/***	   MaxIter:   Maximum number of iteration.												***/
-/***																							***/
-/***	OUTPUT:																					***/
-/***	   Center:   Final centers of the clusters.												***/
-/***	   FeatVect: This structure contains the final partition and							***/
-/***		     the membership assignment.														***/
-/**************************************************************************************************/
+The main Competitive Agglomeration function.
+Takes in data, initialized centers, data details (vector_num, dimensions), and cluster number
+Returns final number of cluster, final cluster center locations, and final point classifications
 """
-def CA(InData, InCenters,
-        MaximumIt=50, Eita_0=2.5, TAU=10, EXPINC=25, 
-        EXPDEC=35, EPS=1.0e-6, MAX_CENT_DIFF=0.001,
-        NumClust=10, NumOfVectors=60, Dim=2, m_p=2):
+def CA(in_data, in_centers,
+        max_iterations=50, cluster_num=10, vector_num=60, dimensions=2,
+        EITA=2.5, TAU=10, EXPINC=25, EXPDEC=35, 
+        MAX_CENTER_DIFFERENCE=0.001, fuzzifier=2):
     
-    # Initialize Data (from InData)
-    FeatVect = []
-    for i in range(0, NumOfVectors):
-        FeatVect.insert(i,Feature_Info(np.zeros(NumClust), 
-                        np.zeros(NumClust), np.zeros(Dim), None))
+    # Initialize Data (from in_data)
+    point_list = []
+    for i in range(0, vector_num):
+        point_list.insert(i,Point(np.zeros(cluster_num), 
+                        np.zeros(cluster_num), np.zeros(dimensions), None))
     # Populate
-    for i in range(0, Dim):
-        for j in range(0, NumOfVectors):
-            FeatVect[j].dimen[i] = InData.iloc[j,i]
+    for i in range(0, dimensions):
+        for j in range(0, vector_num):
+            point_list[j].dimension[i] = in_data.iloc[j,i]
 
-    # Initialize Centers (random data from InCenters)
-    Center = InCenters.values
+    # Initialize centerss (random data from in_centers)
+    centers = in_centers.values
 
-    # MinPts are zero vectors ?
-    MinPts = np.zeros(MaximumIt)
-    MinPts2 = np.ones(MaximumIt)
-    MinPts2[int(MaximumIt/2):MaximumIt] *= 5
+    # mimimum_points are used to determine the minimum number of points allowed in a cluster
+    mimimum_points = np.zeros(max_iterations)
+    mimimum_points2 = np.ones(max_iterations)
+    mimimum_points2[int(max_iterations/2):max_iterations] *= 5
 
-    i, j, IterNum = 0, 0, 0
-    AggCte = 0.0
-    PreviousNumClust = NumClust
+    # Keep track of old values 
+    previous_cluster_num = cluster_num
+    previous_centers = np.zeros((cluster_num, dimensions))
+    for i in range(0, cluster_num):
+        for j in range(0, dimensions):
+            previous_centers[i][j] = centers[i][j]
 
-	# PreviousCenter = DMatrix_2D(0,NumClust,0,Dim)
-    PreviousCenter = np.zeros((NumClust, Dim))
+    agglomeration_constant = 0
+    iteration_num = 0
 
-    for i in range(0, NumClust):
-        for j in range(0, Dim):
-            PreviousCenter[i][j] = Center[i][j]
+    # Run algorithm for maximum number of iterations
+    while (iteration_num < max_iterations):
 
-    while (IterNum < MaximumIt):
-        #print("IterNum={}\n".format(IterNum))
+        # Calculate distance between each point and each cluster
+        EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier)
         
-        FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
-        FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
+        # Assign points to closest cluster
+        AssignPoints(point_list, cluster_num, vector_num)
 
-        if (IterNum>2):
-            FeatVector, AggCte = Get_AggCte(FeatVect,NumClust,IterNum,NumOfVectors,Eita_0, TAU, EXPINC, EXPDEC)
-            #print("AggConst={}\n".format(AggCte))
-            FeatVector = CompMem(FeatVect, NumClust,AggCte,NumOfVectors)
-            FeatVector, NumClust, MinPts, MinPts2 = UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2)
+        # If at least three iterations have not occurred, calculate membership using Fuzzy Algorithm
+        if (iteration_num > 2):
+            agglomeration_constant = AgglomerationConstant(point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC)
+            Membership(point_list, cluster_num, agglomeration_constant, vector_num)
+            cluster_num = ClusterNumber(point_list, cluster_num, iteration_num, vector_num, mimimum_points, mimimum_points2)
         else:
-            FeatVector = FuzzMem(FeatVect, NumClust, NumOfVectors)
+            FuzzyMembership(point_list, cluster_num, vector_num)
         
-        FeatVector, Center = FuzzCenters(FeatVect,Center,NumClust,NumOfVectors,Dim)
+        # Use Fuzzy algorithms to calculate centers
+        FuzzyCenters(point_list, centers, cluster_num, vector_num, dimensions)
         
-        CenDiff = 0.0
-        for i in range(0, NumClust):
-            for j in range(0, Dim):
-                CenDiff += abs(PreviousCenter[i][j]-Center[i][j])
+        # Make sure the difference in center location has not changed too much
+        centers_difference = 0
+        for i in range(0, cluster_num):
+            for j in range(0, dimensions):
+                centers_difference += abs(previous_centers[i][j]-centers[i][j])
                 
-        if (CenDiff < MAX_CENT_DIFF and PreviousNumClust == NumClust):
+        if (centers_difference < MAX_CENTER_DIFFERENCE and previous_cluster_num == cluster_num):
             break
         
-        IterNum += 1 
-        #print("[It# {}]Num. Clust={}\n".format(IterNum,NumClust))
-        PreviousNumClust = NumClust
+        previous_cluster_num = cluster_num
 
 		# Copy the centers into the previous centers
-        for i in range(0, NumClust):
-            for j in range(0, Dim):
-                PreviousCenter[i][j] = Center[i][j]
+        for i in range(0, cluster_num):
+            for j in range(0, dimensions):
+                previous_centers[i][j] = centers[i][j]
+        
+        iteration_num += 1 
     
-    FeatVector, Center = EucDistance(FeatVect, Center, NumClust, NumOfVectors, Dim, m_p)
-    FeatVector = AssignPts(FeatVect, NumClust, NumOfVectors)
+    # Do a final calculation for distance, and a final point assignment
+    EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier)
+    AssignPoints(point_list, cluster_num, vector_num)
     
-    Classifications = []
-    for i in range(0, NumOfVectors):
-        Classifications.append(FeatVect[i].cluster)
+    # Fill a list with classifications to return as output
+    classification_list = []
+    for i in range(0, vector_num):
+        classification_list.append(point_list[i].cluster)
 
-    OutCenters = []
-    for i in range(0, NumClust):
-        OutCenters.append([])
-        for j in range(0, Dim):
-            OutCenters[i].append(Center[i][j])
-    """
-    # ---------- OUTPUT TO FILES ---------------
-    print(NumClust, file=open('NumClust.txt', 'w'))
+    # Fill a list with cluster centers to return as output
+    center_list = []
+    for i in range(0, cluster_num):
+        center_list.append([])
+        for j in range(0, dimensions):
+            center_list[i].append(centers[i][j])
 
-    clusterOut = open('OutCluster.txt', 'w')
-    for i in range(0, NumOfVectors):
-        clusterOut.write(str(FeatVect[i].cluster) + '\n')
-    clusterOut.close()
-    
-    centerOut = open('OutCenters.txt', 'w')
-    for i in range(0, NumClust):
-        for j in range(0, Dim):
-            centerOut.write(str(Center[i][j]) + ' ')
-        centerOut.write('\n')
-    centerOut.close()
+    return(cluster_num, center_list, classification_list)
 
-    # ------------- PLOT --------------
-    
-    fig = plt.figure()
-    ax = plt.axes()
-    x = InData.iloc[:,0]
-    y = InData.iloc[:,1]
-    ax.scatter(x, y)
-    
-    centerCoord = np.zeros(Dim)
-    for i in range(0, NumClust):
-        for j in range(0, Dim):
-            centerCoord[j] = Center[i][j]
-        ax.scatter(centerCoord[0], centerCoord[1], color='red')
-    plt.show()
-    """
-
-    return(NumClust, OutCenters, Classifications)
-"""
-/**************************************************************************************************/
-/*** This procedure computes the Euclidean distance of all feature vectors						***/
-/*** from all clusters. Then, it crisply assigns each feature point to the						***/
-/*** closest cluster.																			***/
-/***																							***/
-/***     INPUT:																					***/
-/***         FeatVector:    A structure containing the feature vectors.							***/
-/***         NumClust:      Total number of clusters.											***/
-/***         Center:        Centers of all clusters.  											***/
-/***		 NumOfVectors:  Total number of feature vectors.									***/
-/***		 Dim:			Total number of dimensions.											***/
-/***																							***/
-/***     OUTPUT:																				***/
-/***         FeatVector:    The component of this structure that holds the						***/
-/***                        distance, and the cluster assignment.								***/
-/**************************************************************************************************/
-"""
-
-def EucDistance(FeatVector, Center, NumClust, NumOfVectors, Dim, m_p):
-    for i in range(0, NumOfVectors):
-        for j in range(0, NumClust):
-            FeatVector[i].dist[j] = 0
-            for k in range(0, Dim):
-                temp = FeatVector[i].dimen[k]-Center[j][k]
+# Calculate the distance from each point to each cluster
+def EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier):
+    for i in range(0, vector_num):
+        for j in range(0, cluster_num):
+            point_list[i].distance[j] = 0
+            for k in range(0, dimensions):
+                temp = point_list[i].dimension[k]-centers[j][k]
                 temp1 = 1
-                for p in range(0, m_p):
+                for p in range(0, fuzzifier):
                     temp1 = temp1*temp
-                FeatVector[i].dist[j] += abs(temp1)
-            FeatVector[i].dist[j] = max(EPS, FeatVector[i].dist[j])
-    return(FeatVector, Center)
+                point_list[i].distance[j] += abs(temp1)
+            point_list[i].distance[j] = max(EPSILON, point_list[i].distance[j])
 
-"""
-/**************************************************************************************************/
-/*** This procedure crisply assigns each feature point to the closest cluster					***/
-/***																							***/
-/***     INPUT:																					***/
-/***         FeatVector:    A structure containing the feature vectors.							***/
-/***         NumOfVectors:  Total number of feature vectors.									***/
-/***         NumClust: Total number of clusters.												***/
-/***     OUTPUT:																				***/
-/***         FeatVector:    The component of this structure that holds the						***/
-/***                        cluster assignment.             									***/
-/**************************************************************************************************/
-"""
-
-def AssignPts(FeatVector, NumClust, NumOfVectors):
-    """
-    int i, j, index; double min;
-	for (i=0; i<NumOfVectors; i++){
-		for (j=0, min=INFINITY; j<NumClust; j++){
-			if ( (FeatVector+i)->dist[j] <  min ) {
-				min = (FeatVector+i)->dist[j]; 
-				index = j; 
-			}
-			(FeatVector+i)->cluster = index;
-		}
-	}
-    """
-    for i in range(0, NumOfVectors):
+# Assign points to the closest avaiable cluster
+def AssignPoints(point_list, cluster_num, vector_num):
+    for i in range(0, vector_num):
+        # Find the smallest distance, start min as "infinity" and find smaller values as they appear
         min = INFINITY
-        for j in range(0, NumClust):
-            if FeatVector[i].dist[j] < min:
-                min = FeatVector[i].dist[j]
+        for j in range(0, cluster_num):
+            if point_list[i].distance[j] < min:
+                min = point_list[i].distance[j]
                 index = j
-            FeatVector[i].cluster = index
-    return(FeatVector)
+            point_list[i].cluster = index
 
-"""
-/**************************************************************************************************/
-/*** This function computes the agglomeration constant. This constant is used					***/
-/*** to control the cometition rate in the competitive clustering Alg.							***/
-/***									    													***/
-/***      INPUT:								  												***/
-/*** 	     FeatVector:   A structure that has all feature vectors.        					***/
-/***         NumOfVectors: Total number of feature vectors.		    							***/
-/***         NumOfClusters:Total number of clusters.			    							***/
-/***         IterNum:      Current iteration number.			    							***/
-/***         Card:         Cardinalities of all clusters.                    					***/ 
-/***         flg:          0 for non robust and 1 for robust clustering      					***/
-/*** 									   														***/
-/***      RETURNS:							    												***/
-/***         The agglomeration constant.                                     					***/
-/**************************************************************************************************/
-"""
-def Get_AggCte (FeatVector, NumClust, IterNum, NumOfVectors, Eita_0, TAU, EXPINC, EXPDEC):
-    ObjFunc, SumCard2 = 0, 0
-    Card = np.zeros(NumClust)
+# Calculates the agglomeration constant which controls the rate at which clusters are pruned
+def AgglomerationConstant (point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC):
+    objective_function, cardinality_sum = 0, 0
+    cardinality = np.zeros(cluster_num)
 
-    for i in range(0, NumClust):
-        Card[i] = 0
-        for j in range(0, NumOfVectors):
-            temp = FeatVector[j].memship[i]
-            Card[i] += temp
-            ObjFunc += temp * temp * FeatVector[j].dist[i]
-        SumCard2 += Card[i] * Card[i]
+    for i in range(0, cluster_num):
+        cardinality[i] = 0
+        for j in range(0, vector_num):
+            temp = point_list[j].membership[i]
+            cardinality[i] += temp
+            objective_function += temp * temp * point_list[j].distance[i]
+        cardinality_sum += cardinality[i] * cardinality[i]
 
-    if (IterNum < EXPINC):
-        Exponent = (IterNum - EXPINC)/TAU  
-    elif (IterNum < EXPDEC):
-        Exponent = 0
+    if (iteration_num < EXPINC):
+        exponent = (iteration_num - EXPINC)/TAU  
+    elif (iteration_num < EXPDEC):
+        exponent = 0
     else:
-        Exponent = (EXPDEC - IterNum) / TAU
+        exponent = (EXPDEC - iteration_num) / TAU
     
-    alpha = Eita_0 * math.exp(Exponent) * ObjFunc/SumCard2
+    alpha = EITA * math.exp(exponent) * objective_function/cardinality_sum
     
-    return(FeatVector, alpha)
+    return alpha
 
-"""
-/**************************************************************************************************/
-/*** This procedure computes the membership of all feature vectors in all						***/
-/*** clusters. The computed mebership has 2 terms: the Fuzzy membership and   					***/
-/*** a bias term.                                                             					***/
-/***                                                                          					***/
-/***     INPUT:								    												***/
-/***         FeatVector:    A structure containing the feature vectors.       					***/
-/***         NumOfVectors:  Total number of feature vectors.                  					***/
-/***         NumOfClusters: Total number of clusters.			    							***/
-/***         AggCte:        A constant term that controls the rate of         					***/
-/***                        agglomeration.                                    					***/
-/***     OUTPUT:								    											***/
-/***         FeatVector:    The membership components of this structure are   					***/
-/***                        updated.                                          					***/
-/**************************************************************************************************/
-"""
-def CompMem(FeatVector, NumClust, AggCte, NumOfVectors):
-    Card = np.zeros(NumClust)
+# Calculate the membership for all clusters for all points
+# Membership contains a Fuzzy membership term and a membership bias term
+def Membership(point_list, cluster_num, agglomeration_constant, vector_num):
+    cardinality = np.zeros(cluster_num)
     
-    for j in range(0, NumClust):
-        Card[j] = 0
-        if (AggCte >= 0.0):
-            for i in range(0, NumOfVectors):
-                Card[j] += FeatVector[i].memship[j]
+    # Calculate cardinality for each cluster (number of points in each cluster)
+    for j in range(0, cluster_num):
+        cardinality[j] = 0
+        if (agglomeration_constant >= 0.0):
+            for i in range(0, vector_num):
+                cardinality[j] += point_list[i].membership[j]
     
-    for i in range(0, NumOfVectors):
-        Max, Min, SumInvDist, AvgCard = 1.0, 0.0, 0.0, 0.0
-        for j in range(0, NumClust):
-            SumInvDist += 1.0/FeatVector[i].dist[j]
-        for j in range(0, NumClust):
-            AvgCard += Card[j]/FeatVector[i].dist[j]
-        AvgCard /= SumInvDist
+    # Calculate inverse distance sum and average cardinality
+    for i in range(0, vector_num):
+        inverse_distance_sum, cardinality_average = 0.0, 0.0
+        for j in range(0, cluster_num):
+            inverse_distance_sum += 1.0/point_list[i].distance[j]
+        for j in range(0, cluster_num):
+            cardinality_average += cardinality[j]/point_list[i].distance[j]
+        cardinality_average /= inverse_distance_sum
 
-        for j in range(0, NumClust):
-            Mem_FCM = 1.0 / (SumInvDist * FeatVector[i].dist[j])
-            Mem_Bias = (Card[j] - AvgCard) / FeatVector[i].dist[j]
-            FeatVector[i].memship[j] = Mem_FCM + AggCte * Mem_Bias
+        for j in range(0, cluster_num):
+            membership_fcm = 1.0 / (inverse_distance_sum * point_list[i].distance[j])
+            membership_bias = (cardinality[j] - cardinality_average) / point_list[i].distance[j]
+            point_list[i].membership[j] = membership_fcm + agglomeration_constant * membership_bias
 
-            # Force membership to be in the interval [0, 1]
-            FeatVector[i].memship[j] = max(0, FeatVector[i].memship[j])
-            FeatVector[i].memship[j] = min(1, FeatVector[i].memship[j])
+            # Force membership to be between 0 and 1
+            point_list[i].membership[j] = max(0, point_list[i].membership[j])
+            point_list[i].membership[j] = min(1, point_list[i].membership[j])
 
-        SumMem = 0
-        for j in range(0, NumClust):
-            SumMem += FeatVector[i].memship[j]
+        membership_sum = 0
+        for j in range(0, cluster_num):
+            membership_sum += point_list[i].membership[j]
 
-        for j in range(0, NumClust):
-            FeatVector[i].memship /= SumMem
+        for j in range(0, cluster_num):
+            point_list[i].membership /= membership_sum
         
-        SumMem = 0
-        for j in range(0, NumClust):
-            SumMem += FeatVector[i].memship[j]
+        membership_sum = 0
+        for j in range(0, cluster_num):
+            membership_sum += point_list[i].membership[j]
         
-        if SumMem > 1.0e-10:
-            for j in range(0, NumClust):
-                FeatVector[i].memship[j] /= SumMem
+        if membership_sum > 1.0e-10:
+            for j in range(0, cluster_num):
+                point_list[i].membership[j] /= membership_sum
         else:
-            for j in range(0, NumClust):
-                FeatVector[i].memship[j] = 1 / NumClust
-    return(FeatVector)
-"""
-/**************************************************************************************************/
-/*** This procedure updates the number of clusters for the competitive alg.						***/
-/*** A cluster is deleted if its cardinality is less than its dimensionality. 					***/
-/***                                                                          					***/
-/***     INPUT:                                                               					***/
-/***       FeatVect:    A structure holding the feature vectors.              					***/
-/***       NumOfVectors:     Total number of feature vectors.                      				***/
-/***       NumClust:    Initial number of clusters.                           					***/
-/***       Dim:         Dimensionality of the feature space.                  					***/
-/***                                                                          					***/
-/***     OUTPUT:                                                              					***/
-/***       NumClust:    Updated number of clusters.                           					***/
-/**************************************************************************************************/
-"""
-def UpdateNumClusters(FeatVect, NumClust, IterNum, NumOfVectors, MinPts, MinPts2):
-    i, j, OptNumClust = (0, 0, 0)
-    Empty_clust = np.zeros(NumClust)
-    Card = np.zeros(NumClust)
-    Card2 = np.zeros(NumClust)
-    Card3 = np.zeros(NumClust)
-    
-    
-    for i in range(0, NumClust):
-        Empty_clust[i] = 0 # Assume first that all clusters are not empty
-        Card[i] = 0
-        Card3[i] = 0
-        for j in range(0, NumOfVectors):
-            Card[i] += FeatVect[j].memship[i]*FeatVect[j].memship[i]
-            Card3[i] += FeatVect[j].memship[i]
-            if FeatVect[j].cluster == i:
-                Card2[i] += 1
+            for j in range(0, cluster_num):
+                point_list[i].membership[j] = 1 / cluster_num
+
+# Calculate new number of clusters
+def ClusterNumber(point_list, cluster_num, iteration_num, vector_num, mimimum_points, mimimum_points2):
+    optimal_cluster_num = 0
+    empty_clust = np.zeros(cluster_num)
+    cardinality, cardinality2, cardinality3 = np.zeros(cluster_num), np.zeros(cluster_num), np.zeros(cluster_num)
+
+    for i in range(0, cluster_num):
+        empty_clust[i], cardinality[i], cardinality3[i] = 0, 0, 0
+        for j in range(0, vector_num):
+            cardinality[i] += point_list[j].membership[i]*point_list[j].membership[i]
+            cardinality3[i] += point_list[j].membership[i]
+            if point_list[j].cluster == i:
+                cardinality2[i] += 1
         
-        if (Card[i] <= MinPts[IterNum]) or (Card2[i] <= MinPts2[IterNum]):
-            Empty_clust[i] = 1
+        if (cardinality[i] <= mimimum_points[iteration_num]) or (cardinality2[i] <= mimimum_points2[iteration_num]):
+            empty_clust[i] = 1
 
-        #if IterNum >= 3:
-            #print('{} ===> Card[{}] = {}   Card2[{}] = {}\n'.format(IterNum, i, Card[i], i, Card2[i]))
+    for i in range(0, cluster_num):
+        if empty_clust[i] == 0:
+            for j in range(0, vector_num):
+                point_list[j].membership[optimal_cluster_num] = point_list[j].membership[i]
+                if point_list[j].cluster == i:
+                    point_list[j].cluster = optimal_cluster_num
+            optimal_cluster_num += 1
 
-    for i in range(0, NumClust):
-        if Empty_clust[i] == 0:
-            for j in range(0, NumOfVectors):
-                FeatVect[j].memship[OptNumClust] = FeatVect[j].memship[i]
-                if FeatVect[j].cluster == i:
-                    FeatVect[j].cluster = OptNumClust
-            OptNumClust += 1
+    return(optimal_cluster_num)
 
-    return(FeatVect, OptNumClust, MinPts, MinPts2)
+# Use Fuzzy algorithm to calculate membership
+def FuzzyMembership(point_list, cluster_num, vector_num):
+    for i in range(0, vector_num):
+        inverse_distance_sum = 0
+        for j in range(0, cluster_num):
+            inverse_distance_sum +=  1 / point_list[i].distance[j]
+        for j in range(0, cluster_num):
+            temp = point_list[i].distance[j]
+            point_list[i].membership[j] = 1 / (inverse_distance_sum*temp)
 
-"""
-/**************************************************************************************************/
-/*** This procedure computes the fuzzy membership of all feature vectors in						***/
-/*** all clusters.  						           											***/
-/***                                                                          					***/
-/***     INPUT:								    												***/
-/***         FeatVector:    A structure containing the feature vectors.       					***/
-/***        NumOfVectors:  Total number of feature vectors.                  					***/
-/***         NumOfClusters: Total number of clusters.			    							***/
-/***         m:             The fuzzifier.				    									***/
-/***     OUTPUT:								    											***/
-/***         FeatVector:    The membership components of this structure are   					***/
-/***                        updated.                                          					***/
-/**************************************************************************************************/
-"""
+# Use Fuzzy algorithm to calculate centers
+def FuzzyCenters(point_list, centers, cluster_num, vector_num, dimensions):
+    cardinality = np.zeros(cluster_num)
 
-def FuzzMem(FeatVector, NumClust, NumOfVectors):
-    for i in range(0, NumOfVectors):
-        SumInvDist = 0
-        for j in range(0, NumClust):
-            SumInvDist +=  1 / FeatVector[i].dist[j]
-        for j in range(0, NumClust):
-            temp = FeatVector[i].dist[j]
-            FeatVector[i].memship[j] = 1 / (SumInvDist*temp)
-    return(FeatVector)
-"""
-/**************************************************************************************************/
-/*** This procedure updates the centers for the Fuzzy algorithms.								***/
-/***                                                                          					***/
-/***     INPUT:                                                               					***/
-/***       FeatVect:    A structure holding the feature vectors.              					***/
-/***       NumOfVectors:     Total number of feature vectors.                    				***/
-/***       NumOfClusters:    Total number of clusters.                             				***/
-/***       Dim:         Dimensionality of the feature space.                  					***/
-/***       m:           Fuzzifier.			                    								***/
-/***                                                                          					***/
-/***     OUTPUT:                                                              					***/
-/***      Center: Updated centers.                          		    						***/
-/**************************************************************************************************/
-"""
+    for j in range(0, cluster_num):
+        cardinality[j] = 0
+        for k in range(0, dimensions):
+            centers[j][k] = 0
 
-def FuzzCenters(FeatVect, Center, NumClust, NumOfVectors, Dim):
-    Card = np.zeros(NumClust)
+        for i in range(0, vector_num):
+            temp = point_list[i].membership[j] * point_list[i].membership[j]
 
-    for j in range(0, NumClust):
-        Card[j] = 0
-        for k in range(0, Dim):
-            Center[j][k] = 0
+            cardinality[j] += temp
+            for k in range(0, dimensions):
+                centers[j][k] += temp * point_list[i].dimension[k]
 
-        for i in range(0, NumOfVectors):
-            temp = FeatVect[i].memship[j] * FeatVect[i].memship[j]
+        for k in range(0, dimensions):
+            centers[j][k] /= cardinality[j] + EPSILON
 
-            Card[j] += temp
-            for k in range(0, Dim):
-                Center[j][k] += temp * FeatVect[i].dimen[k]
-
-        for k in range(0, Dim):
-            Center[j][k] /= Card[j] + EPS
-
-    return (FeatVect, Center)
-
-"""
-/**************************************************************************************************/
-/*** This procedure initializes the centers for the C clusters. The centers						***/
-/*** are chosen as C data points equally spaced.                              					***/
-/***                                                                          					***/
-/***     INPUT:                                                               					***/
-/***       FeatVect:    A structure holding the feature vectors.              					***/
-/***       NumOfVectors:     Total number of feature vectors.                 					***/
-/***       NumOfClusters:    Total number of clusters.                        					***/
-/***       Dim:         Dimensionality of the feature space.                  					***/
-/***                                                                          					***/
-/***     OUTPUT:                                                              					***/
-/***       Center: Initial centers for the clusters.                          					***/
-/**************************************************************************************************/
-"""
-def InitCenters (Center, FeatVect, NumClust, NumOfVectors, Dim):
-    for k in range(0,Dim):
-        for j in range(0, NumClust):
-            index = j * NumOfVectors/NumClust
-            Center[j][k] = FeatVect[index].dimen[k]
-    return(Center, FeatVect)
+# Initialize centers in an evenly spaced manner
+# Currently not used because of the use of predefined pseudorandom center points
+def InitializeCenters (centers, point_list, cluster_num, vector_num, dimensions):
+    for k in range(0,dimensions):
+        for j in range(0, cluster_num):
+            index = j * vector_num/cluster_num
+            centers[j][k] = point_list[index].dimension[k]

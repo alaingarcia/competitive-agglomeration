@@ -1,35 +1,10 @@
-from CA import CA
 from EM import EM
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 from accuracy import matrixAccuracy
 
-def plot(InData, NumClust1, OutCenter1, NumClust2=None, OutCenter2=None, Dim=2, color=("orange","black")):
-    fig = plt.figure()
-    ax = plt.axes()
-    x = InData.iloc[:,0]
-    y = InData.iloc[:,1]
-    ax.scatter(x, y,s=1)
-
-    centerCoord1 = np.zeros(Dim)
-    for i in range(0, NumClust1):
-        for j in range(0, Dim):
-            centerCoord1[j] = OutCenter1[i][j]
-        ax.scatter(centerCoord1[0], centerCoord1[1], color=color[0])
-
-    if(NumClust2 and OutCenter2):
-        centerCoord2 = np.zeros(Dim)
-        for i in range(0, NumClust2):
-            for j in range(0, Dim):
-                centerCoord2[j] = OutCenter2[i][j]
-            ax.scatter(centerCoord2[0], centerCoord2[1], color=color[1])
-    plt.show()
-
-
-if __name__ == '__main__':
-
+def EM_RUN():
     #-------------------------small db-------------------------------------
     InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
     InCenters = InCenters.to_numpy().tolist()
@@ -98,7 +73,8 @@ if __name__ == '__main__':
     print("EM time: {} ms".format(EM_time))
     print("EM accuracy: {}%\n\n".format(EM_accuracy*100))
 
+    #---------------determine matrix for assigning clusters--------------------
+    return (EM_NumClust, EM_OutCenter)
 
-    #------------------------Show plot(if 2D)-----------------------------
-
-    plot(InData_origin, EM_NumClust, EM_OutCenter)
+if __name__ == '__main__':
+    EM_RUN()
