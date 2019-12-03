@@ -34,7 +34,8 @@ Takes in data, initialized centers, data details (vector_num, dimensions), and c
 Returns final number of cluster, final cluster center locations, and final point classifications
 """
 def CA(in_data, in_centers,
-        max_iterations=50, cluster_num=10, vector_num=60, dimensions=2,
+        cluster_num, vector_num,
+        max_iterations=50, dimensions=2,
         EITA=2.5, TAU=10, EXPINC=25, EXPDEC=35, 
         MAX_CENTER_DIFFERENCE=0.001, fuzzifier=2):
     
@@ -51,40 +52,41 @@ def CA(in_data, in_centers,
     # Initialize centerss (random data from in_centers)
     centers = in_centers.values
 
-    # mimimum_points are used to determine the minimum number of points allowed in a cluster
-    mimimum_points = np.zeros(max_iterations)
-    mimimum_points2 = np.ones(max_iterations)
-    mimimum_points2[int(max_iterations/2):max_iterations] *= 5
+    # minimum_points are used to determine the minimum number of points allowed in a cluster
+    minimum_points = np.zeros(max_iterations)
+    minimum_points2 = np.ones(max_iterations)
+    minimum_points2[int(max_iterations/2):max_iterations] *= 5
 
-    # Keep track of old values 
+
+    agglomeration_constant = 0
+    iteration_num = 0
+
     previous_cluster_num = cluster_num
     previous_centers = np.zeros((cluster_num, dimensions))
     for i in range(0, cluster_num):
         for j in range(0, dimensions):
             previous_centers[i][j] = centers[i][j]
 
-    agglomeration_constant = 0
-    iteration_num = 0
-
     # Run algorithm for maximum number of iterations
     while (iteration_num < max_iterations):
 
         # Calculate distance between each point and each cluster
-        EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier)
+        point_list, centers = EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier)
         
         # Assign points to closest cluster
-        AssignPoints(point_list, cluster_num, vector_num)
+        point_list = AssignPoints(point_list, cluster_num, vector_num)
 
         # If at least three iterations have not occurred, calculate membership using Fuzzy Algorithm
         if (iteration_num > 2):
-            agglomeration_constant = AgglomerationConstant(point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC)
-            Membership(point_list, cluster_num, agglomeration_constant, vector_num)
-            cluster_num = ClusterNumber(point_list, cluster_num, iteration_num, vector_num, mimimum_points, mimimum_points2)
+            point_list, agglomeration_constant = AgglomerationConstant(point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC)
+            point_list = Membership(point_list, cluster_num, agglomeration_constant, vector_num)
+            point_list, cluster_num, minimum_points, minimum_points2 = ClusterNumber(point_list, cluster_num, iteration_num, vector_num, minimum_points, minimum_points2)
+            print("Iteration number: {}, Cluster number: {}".format(iteration_num, cluster_num))
         else:
-            FuzzyMembership(point_list, cluster_num, vector_num)
+            point_list = FuzzyMembership(point_list, cluster_num, vector_num)
         
         # Use Fuzzy algorithms to calculate centers
-        FuzzyCenters(point_list, centers, cluster_num, vector_num, dimensions)
+        point_list, centers = FuzzyCenters(point_list, centers, cluster_num, vector_num, dimensions)
         
         # Make sure the difference in center location has not changed too much
         centers_difference = 0
@@ -105,8 +107,8 @@ def CA(in_data, in_centers,
         iteration_num += 1 
     
     # Do a final calculation for distance, and a final point assignment
-    EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier)
-    AssignPoints(point_list, cluster_num, vector_num)
+    point_list, centers = EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, fuzzifier)
+    point_list = AssignPoints(point_list, cluster_num, vector_num)
     
     # Fill a list with classifications to return as output
     classification_list = []
@@ -134,6 +136,7 @@ def EuclideanDistance(point_list, centers, cluster_num, vector_num, dimensions, 
                     temp1 = temp1*temp
                 point_list[i].distance[j] += abs(temp1)
             point_list[i].distance[j] = max(EPSILON, point_list[i].distance[j])
+    return(point_list, centers)
 
 # Assign points to the closest avaiable cluster
 def AssignPoints(point_list, cluster_num, vector_num):
@@ -145,6 +148,7 @@ def AssignPoints(point_list, cluster_num, vector_num):
                 min = point_list[i].distance[j]
                 index = j
             point_list[i].cluster = index
+    return(point_list)
 
 # Calculates the agglomeration constant which controls the rate at which clusters are pruned
 def AgglomerationConstant (point_list, cluster_num, iteration_num, vector_num, EITA, TAU, EXPINC, EXPDEC):
@@ -168,7 +172,7 @@ def AgglomerationConstant (point_list, cluster_num, iteration_num, vector_num, E
     
     alpha = EITA * math.exp(exponent) * objective_function/cardinality_sum
     
-    return alpha
+    return (point_list, alpha)
 
 # Calculate the membership for all clusters for all points
 # Membership contains a Fuzzy membership term and a membership bias term
@@ -217,22 +221,27 @@ def Membership(point_list, cluster_num, agglomeration_constant, vector_num):
         else:
             for j in range(0, cluster_num):
                 point_list[i].membership[j] = 1 / cluster_num
+    return(point_list)
 
 # Calculate new number of clusters
-def ClusterNumber(point_list, cluster_num, iteration_num, vector_num, mimimum_points, mimimum_points2):
+def ClusterNumber(point_list, cluster_num, iteration_num, vector_num, minimum_points, minimum_points2):
     optimal_cluster_num = 0
     empty_clust = np.zeros(cluster_num)
-    cardinality, cardinality2, cardinality3 = np.zeros(cluster_num), np.zeros(cluster_num), np.zeros(cluster_num)
+    cardinality = np.zeros(cluster_num)
+    cardinality2 = np.zeros(cluster_num)
+    cardinality3 = np.zeros(cluster_num)
 
     for i in range(0, cluster_num):
-        empty_clust[i], cardinality[i], cardinality3[i] = 0, 0, 0
+        empty_clust[i] = 0
+        cardinality[i] = 0
+        cardinality3[i] = 0
         for j in range(0, vector_num):
             cardinality[i] += point_list[j].membership[i]*point_list[j].membership[i]
             cardinality3[i] += point_list[j].membership[i]
             if point_list[j].cluster == i:
                 cardinality2[i] += 1
         
-        if (cardinality[i] <= mimimum_points[iteration_num]) or (cardinality2[i] <= mimimum_points2[iteration_num]):
+        if (cardinality[i] <= minimum_points[iteration_num]) or (cardinality2[i] <= minimum_points2[iteration_num]):
             empty_clust[i] = 1
 
     for i in range(0, cluster_num):
@@ -243,7 +252,7 @@ def ClusterNumber(point_list, cluster_num, iteration_num, vector_num, mimimum_po
                     point_list[j].cluster = optimal_cluster_num
             optimal_cluster_num += 1
 
-    return(optimal_cluster_num)
+    return(point_list, optimal_cluster_num, minimum_points, minimum_points2)
 
 # Use Fuzzy algorithm to calculate membership
 def FuzzyMembership(point_list, cluster_num, vector_num):
@@ -254,6 +263,7 @@ def FuzzyMembership(point_list, cluster_num, vector_num):
         for j in range(0, cluster_num):
             temp = point_list[i].distance[j]
             point_list[i].membership[j] = 1 / (inverse_distance_sum*temp)
+    return(point_list)
 
 # Use Fuzzy algorithm to calculate centers
 def FuzzyCenters(point_list, centers, cluster_num, vector_num, dimensions):
@@ -273,6 +283,7 @@ def FuzzyCenters(point_list, centers, cluster_num, vector_num, dimensions):
 
         for k in range(0, dimensions):
             centers[j][k] /= cardinality[j] + EPSILON
+    return(point_list, centers)
 
 # Initialize centers in an evenly spaced manner
 # Currently not used because of the use of predefined pseudorandom center points

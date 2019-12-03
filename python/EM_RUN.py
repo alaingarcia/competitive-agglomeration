@@ -4,26 +4,25 @@ import numpy as np
 import time
 from accuracy import matrixAccuracy
 
-def EM_RUN():
+def EM_RUN(NumClust=25):
     #-------------------------small db-------------------------------------
-    InCenters = pd.read_csv('data/training/random-centers-40.csv', header=None)
+    InCenters = pd.read_csv('data/A1-Dataset/random-centers-40.csv', header=None)
     InCenters = InCenters.to_numpy().tolist()
 
-    InData_origin = pd.read_csv('data/training/a1.csv', header=None)
+    InData_origin = pd.read_csv('data/A1-Dataset/a1.csv', header=None)
     InData = InData_origin.to_numpy().tolist()
 
-    NumClust=25
     Iterations=50
     NumOfVectors=3000
     InCenters = InCenters[0:NumClust]
 
-    actual_classification_file = pd.read_csv("data/training/a1-ga.csv", header=None)
+    actual_classification_file = pd.read_csv("data/A1-Dataset/a1-ga.csv", header=None)
     actual_classification_vector = actual_classification_file[0].tolist()
 
-    actual_clusters = pd.read_csv("data/training/a1-ga-cb.csv", header=None)
+    actual_clusters = pd.read_csv("data/A1-Dataset/a1-ga-cb.csv", header=None)
     actual_clusters = actual_clusters.to_numpy().tolist()
 
-    trainIndexes = pd.read_csv("data/training/training_index.csv", header=None)
+    trainIndexes = pd.read_csv("data/A1-Dataset/training_index.csv", header=None)
     trainIndexes = trainIndexes[0].tolist()
     #--------------------------Large DB-------------------------------------
 
@@ -49,11 +48,11 @@ def EM_RUN():
 
     #--------------------------EM-----------------------------------------
 
-    # EM_train_start_time = time.time_ns()
-    # EM_train_NumClust,EM_train_OutCenter, EM_train_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, testSet=trainIndexes, classification=actual_classification_vector).info()
-    # EM_train_end_time = time.time_ns()
-    # EM_train_time = (EM_train_end_time-EM_train_start_time)/1e6
-    # EM_train_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, EM_train_OutCenter, EM_train_Classifications)
+    EM_train_start_time = time.time_ns()
+    EM_train_NumClust,EM_train_OutCenter, EM_train_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50, testSet=trainIndexes, classification=actual_classification_vector).info()
+    EM_train_end_time = time.time_ns()
+    EM_train_time = (EM_train_end_time-EM_train_start_time)/1e6
+    EM_train_accuracy = matrixAccuracy(actual_clusters, actual_classification_vector, EM_train_OutCenter, EM_train_Classifications)
 
     EM_start_time = time.time_ns()
     EM_NumClust,EM_OutCenter, EM_Classifications  = EM.ExpectationMaximization(InData, InCenters, rep=50).info()
@@ -63,9 +62,9 @@ def EM_RUN():
     #
     # # print("EM_trained cluster centers: {}".format(EM_train_OutCenter))
     # # print("EM_trained classification vector: {}".format(EM_train_Classifications))
-    # print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
-    # print("EM_trained time: {} ms".format(EM_train_time))
-    # print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
+    print("EM_trained final number of cluster: {}".format(EM_train_NumClust))
+    print("EM_trained time: {} ms".format(EM_train_time))
+    print("EM_trained accuracy: {}%\n\n".format(EM_train_accuracy*100))
 
     # print("EM cluster centers: {}".format(EM_OutCenter))
     # print("EM classification vector: {}".format(EM_Classifications))
