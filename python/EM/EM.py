@@ -43,6 +43,8 @@ class ExpectationMaximization:
 
     #Complete algorithm in init
     def __init__(self, data, clusterData, rep=100, testSet=None, classification=None, pandas=False):
+        print('Starting Expectation Maximization algorithm:\n')
+
         if(pandas):
             data, clusterData = self.pandasConvert(data, clusterData)
 
@@ -67,7 +69,7 @@ class ExpectationMaximization:
             if(testSet and classification):
                 self.Train(self.clusters, self.dataPoints, self.trainingSets)
                 self.M_step(self.clusters, self.dataPoints)
-            print(i, len(self.clusters))
+            print("Repetition: {0} / Number of clusters: {1}".format(i, len(self.clusters)))
 
     #Expectation Step
     def E_step(self, clusters, data):
